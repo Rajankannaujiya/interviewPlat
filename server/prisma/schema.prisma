@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id String @id @default(cuid())
+  username String
+  email String
+  mobileNumber String
+  profileUrl String
+  password String
+  Comment Comment[]
+  role Role @default(CANDIDATE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  interviewsAsInterviewer Interview[] @relation("UserAsInterviewer")
+  interviewsAsCandidate Interview[] @relation("UserAsCandidate")
+
+}
+
+model Interview {
+  id String @id @default(cuid())
+  interviewerId String
+  candidateId String
+  scheduledTime DateTime
+  status InterViewStatus @default(SCHEDULED)
+  feedback Feedback?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Comment Comment[]
+  interviewr User @relation("UserAsInterviewer" ,fields: [interviewerId], references: [id])
+  candidate User @relation("UserAsCandidate" ,fields: [candidateId], references: [id])
+}
+
+model Feedback {
+  id String @id @default(cuid())
+  interviewId String @unique
+  rating Int
+  interview Interview @relation(fields: [interviewId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+
+model Comment {
+  id String @id @default(cuid())
+  interviewId String
+  authorId String?
+  content String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  interview Interview @relation(fields: [interviewId], references: [id])
+  author User? @relation(fields: [authorId], references: [id])
+}
+enum Role {
+  INTERVIEWER
+  CANDIDATE
+  ADMIN
+}
+
+enum InterViewStatus {
+  SCHEDULED
+  ONGOING
+  COMPLETED
+  CANCELLED
+
+}
