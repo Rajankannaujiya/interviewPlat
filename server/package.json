@@ -4,30 +4,34 @@
   "description": "",
   "main": "index.js",
   "type": "module",
- "scripts": {
-  "test": "echo \"Error: no test specified\" && exit 1",
-  "dev": "nodemon --watch src --ext ts --exec tsx src/index.ts",
-  "build": "rimraf dist && tsc",
-  "start": "npm run build && node dist/index.js",
-  "seed": "tsx prisma/seed.ts",
-  "prisma:generate": "npx prisma generate --schema=./packages/db/schema.prisma"
-},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon --watch src --ext ts --exec tsx src/index.ts",
+    "build": "rimraf dist && tsc",
+    "start": "npm run build && node dist/index.js",
+    "seed": "tsx prisma/seed.ts",
+    "prisma:generate": "npx prisma generate --schema=./packages/db/schema.prisma"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^6.9.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/ws": "^8.18.1",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "rimraf": "^6.0.1"
+    "rimraf": "^6.0.1",
+    "ws": "^8.18.2"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",
     "nodemon": "^3.1.10",
+    "prisma": "^6.9.0",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.19.4",
