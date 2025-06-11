@@ -1,0 +1,46 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment
+.env
+# Logs
+logs/
+*.log
+*.log.*
+
+# Build outputs
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Prisma
+prisma/dev.db
+prisma/dev.db-journal
+prisma/migrations/*/README.md
+
+# Redis dump (if any)
+dump.rdb
+
+# VS Code
+.vscode/
+.history/
+
+# MacOS
+.DS_Store
+
+# Linux
+*.swp
+
+# IDEs
+.idea/
+*.iml
+
+# Others
+tmp/
+temp/
+.cache/
