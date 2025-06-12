@@ -6,9 +6,6 @@ export function setUpWebsocketServer(server:Server){
 
 const wss = new WebSocketServer({server});
 
-
-console.log("one time");
-
 wss.on("connection",(ws:WebSocket)=>{
 
     console.log("connection established");
@@ -18,7 +15,7 @@ wss.on("connection",(ws:WebSocket)=>{
         try {
             
             const data = JSON.parse(message)
-            console.log(data)
+            console.log("this is the data",data)
         } catch (error) {
             
         }
