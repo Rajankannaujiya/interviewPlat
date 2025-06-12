@@ -7,7 +7,7 @@ class RedisClient{
    
     constructor(){
         this.client = createClient({
-           url:process.env.REDIS_URI
+           url:`redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`
         });
         
         this.client.on('orror', (error:any)=>{
@@ -34,12 +34,18 @@ class RedisClient{
         return await this.client.get(key);
     }
 
+
+    async ttl(key:string):Promise<number | null>{
+        return await this.client.ttl(key);
+    }
+
+
     async del(key:string):Promise<void>{
         await this.client.del(key);
     }
 
     async disconnect():Promise<void>{
-        await this.client.destroy();
+        this.client.destroy();
     }
 }
 
