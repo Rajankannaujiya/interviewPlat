@@ -18,6 +18,7 @@ isMobileVerified Boolean @default(false)
 password String?
 profileUrl String?
 role Role @default(CANDIDATE)
+notification Notification[]
 createdAt DateTime @default(now())
 updatedAt DateTime @updatedAt
 interviewsAsInterviewer Interview[] @relation("UserAsInterviewer")
@@ -27,14 +28,14 @@ comments Comment[]
 
 model Interview {
   id String @id @default(cuid())
-  interviewerId String
-  candidateId String
   scheduledTime DateTime
   status InterViewStatus @default(SCHEDULED)
   feedback Feedback?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Comment Comment[]
+  interviewerId String
+  candidateId String
   interviewr User @relation("UserAsInterviewer" ,fields: [interviewerId], references: [id])
   candidate User @relation("UserAsCandidate" ,fields: [candidateId], references: [id])
 }
@@ -43,6 +44,7 @@ model Feedback {
   id String @id @default(cuid())
   interviewId String @unique
   rating Int
+  note String
   interview Interview @relation(fields: [interviewId], references: [id])
   createdAt DateTime @default(now())
 }
@@ -58,6 +60,36 @@ model Comment {
   interview Interview @relation(fields: [interviewId], references: [id])
   author User? @relation(fields: [authorId], references: [id])
 }
+
+model Notification {
+id String @id @default(cuid())
+type NotificationType
+recipientId String
+recipient User @relation(fields: [recipientId], references: [id])
+message String
+status NotificationStatus @default(PENDING)
+channel NotificationChannel @default(EMAIL)
+createdAt DateTime @default(now())
+sentAt DateTime?
+}
+
+enum NotificationStatus {
+PENDING
+SENT
+FAILED
+}
+
+enum NotificationChannel {
+EMAIL
+SMS
+}
+
+enum NotificationType {
+REMINDER
+RESCHEDULE
+CANCELLATION
+}
+
 enum Role {
   INTERVIEWER
   CANDIDATE

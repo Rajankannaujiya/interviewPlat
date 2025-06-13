@@ -1,11 +1,12 @@
 import { Response, Request } from "express";
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { prisma } from '../../db/db.index'
 import redisClient from "../../utils/redis/redis-otp";
-import { sendOtpNotification, sendSms } from "./config";
-import { generateOTP } from "./config";
+import { sendOtpNotification, sendSms, sentWelcomeNotification } from "../../utils/smsAndMails/config";
+import { generateOTP } from "../../utils/smsAndMails/config";
 
-
+// JWT_SECRET
 
 export const sendSignUpOtpToEmail = async (req: Request, res: Response): Promise<void> => {
   console.log(req.body)
@@ -38,14 +39,14 @@ export const sendSignUpOtpToEmail = async (req: Request, res: Response): Promise
 
     await redisClient.setEx(key, ttl, hashedOtp);
     await redisClient.disconnect();
-    if(!await sendOtpNotification(email, otp)) {
-      res.status(401).json({error: "Unable to send email"})
+    if (!await sendOtpNotification(email, otp)) {
+      res.status(401).json({ error: "Unable to send email" })
       return
     }
     res.status(200).json({ message: 'Otp sent successfully' });
     return;
 
-  } catch (error:any) {
+  } catch (error: any) {
     console.log("error", error.message)
     res.status(500).json({ error: 'Failed to send OTP' });
     return;
@@ -72,14 +73,30 @@ export const verifyemailotp = async (req: Request, res: Response): Promise<void>
       return;
     }
 
+    const secret = process.env.JWT_SECRET
+
+    if (!secret) {
+      res.status(500).json({
+        message: "Internal server error: JWT secret not configured",
+      });
+      return
+    }
+
     await redisClient.del(key)
     await redisClient.disconnect()
-    await prisma.user.update({
+    const user = await prisma.user.update({
       where: { email },
       data: { isEmailVerified: true }
     });
 
-    res.status(200).json({ message: 'Otp verified successfully' });
+     if (!await sentWelcomeNotification(email, user.username)) {
+      res.status(401).json({ error: "Unable to send Welcome email" })
+      return
+    }
+    
+
+    const token = jwt.sign(user, secret as string );
+    res.status(200).json({ message: 'Otp verified successfully', token: token, user: user });
     return;
   } catch (error) {
     res.status(500).json({ error: 'Failed to verify OTP' });
@@ -107,22 +124,23 @@ export const sendLoginotpEmail = async (req: Request, res: Response): Promise<vo
     const saltRounds = 10;
     const hashedOtp = await bcrypt.hash(otp, saltRounds);
 
-      await redisClient.connect()
+    await redisClient.connect()
     const key = `otp:${email}`
     const ttl = 300;
 
 
     await redisClient.setEx(key, ttl, hashedOtp);
     await redisClient.disconnect()
-    
-    if(!await sendOtpNotification(email, otp)) {
-      res.status(401).json({error: "Unable to send email"})
+
+    if (!await sendOtpNotification(email, otp)) {
+      res.status(401).json({ error: "Unable to send email" })
       return
     }
     res.status(200).json({ message: 'Otp sent successfully' });
     return
 
-  } catch (error) {
+  } catch (error: any) {
+    console.log("an error occured", error.message)
     res.status(500).json({ error: 'Failed to send OTP' });
     return
   }
@@ -171,8 +189,8 @@ export const sendSignUpOtpToMobile = async (req: Request, res: Response): Promis
     await redisClient.setEx(key, ttl, hashedOtp);
     await redisClient.disconnect();
 
-    if(!await sendSms(mobileNumber, otp)) {
-      res.status(401).json({error: "Unable to send email"})
+    if (!await sendSms(mobileNumber, otp)) {
+      res.status(401).json({ error: "Unable to send email" })
       return
     }
 
@@ -203,14 +221,25 @@ export const verifymobileotp = async (req: Request, res: Response): Promise<void
       res.status(400).json({ error: 'Invalid OTP' });
       return;
     }
+
+    const secret = process.env.JWT_SECRET
+
+    if (!secret) {
+      res.status(500).json({
+        message: "Internal server error: JWT secret not configured",
+      });
+      return
+    }
     await redisClient.del(key)
     await redisClient.disconnect();
-    await prisma.user.update({
+    const user = await prisma.user.update({
       where: { mobileNumber },
       data: { isMobileVerified: true }
     });
 
-    res.status(200).json({ message: 'Otp verified successfully' });
+
+    const token = jwt.sign(user, secret as string);
+    res.status(200).json({ message: 'Otp verified successfully', token: token, user: user });
     return;
   } catch (error) {
     res.status(500).json({ error: 'Failed to verify OTP' });
@@ -245,8 +274,8 @@ export const sendLoginotpMobile = async (req: Request, res: Response): Promise<v
 
     await redisClient.setEx(key, ttl, hashedOtp);
     await redisClient.disconnect();
-    if(!await sendSms(mobileNumber, otp)) {
-      res.status(401).json({error: "Unable to send email"})
+    if (!await sendSms(mobileNumber, otp)) {
+      res.status(401).json({ error: "Unable to send email" })
       return
     }
     res.status(200).json({ message: 'Otp sent successfully' });
@@ -294,8 +323,8 @@ export const resendOtpEmail = async (req: Request, res: Response): Promise<void>
     await redisClient.setEx(cooldownKey, 60, '1');
     await redisClient.disconnect()
 
-     if(!await sendOtpNotification(email, otp)) {
-      res.status(401).json({error: "Unable to send email"})
+    if (!await sendOtpNotification(email, otp)) {
+      res.status(401).json({ error: "Unable to send email" })
       return
     }
 
@@ -349,8 +378,8 @@ export const resendOtpMobile = async (req: Request, res: Response): Promise<void
     await redisClient.setEx(key, ttl, hashedOtp);
     await redisClient.setEx(cooldownKey, 60, '1');
     await redisClient.disconnect();
-    if(!await sendSms(mobileNumber, otp)) {
-      res.status(401).json({error: "Unable to send email"})
+    if (!await sendSms(mobileNumber, otp)) {
+      res.status(401).json({ error: "Unable to send email" })
       return
     }
 

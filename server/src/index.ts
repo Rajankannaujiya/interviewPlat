@@ -8,7 +8,9 @@ import { setUpWebsocketServer } from "./websocket.js";
 // routers
 import interviewRouter from "./route/inteviewRouter";
 import authRouter from "./route/authRouter"
-import userRouter from "./route/userRouter.js"
+import userRouter from "./route/userRouter";
+import feedbackRouter from "./route/feedbackRouter"
+import commentRouter from "./route/commentRouter"
 
 dotenv.config();
 
@@ -23,6 +25,8 @@ res.send("Hi from backend");
 app.use("/api/interview", interviewRouter);
 app.use("/api/auth", authRouter)
 app.use("/api/user", userRouter)
+app.use("/api/feedback", feedbackRouter)
+app.use("/api/comment", commentRouter)
 
 const server = http.createServer(app);
 

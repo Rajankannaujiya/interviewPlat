@@ -22,10 +22,8 @@ const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = twilio(accountSid,authToken);
 
 
-const adminEmail = process.env.ADMIN_EMAIL
 
 export async function sendOtpNotification(email:string, otp:string):Promise<boolean> {
-    console.log("📧 Sending otp to notification for:", adminEmail);
   try {
 
     const info = await transporter.sendMail({
@@ -44,11 +42,6 @@ export async function sendOtpNotification(email:string, otp:string):Promise<bool
 
 export async function sentWelcomeNotification(email:string, name:string):Promise<boolean> {
   console.log("this is the user",email);
-if (!adminEmail) {
-  console.error("No admin emails configured");
-  return false;
-}
-
 try {
 
   const info = await transporter.sendMail({
@@ -60,9 +53,27 @@ try {
   console.log("Notification email sent:", info.messageId);
   return true
 } catch (err:any) {
-  console.error("Error sending sign-in notification:", err);
+  console.error("Error sending welcome notification:", err);
   return false
 }
+}
+
+export const sendInteviewScheduleMail = async(email:string, username:string,interviewerName: string, scheduledTime: string): Promise<boolean> =>{
+
+  try {
+   const info = await transporter.sendMail({
+      from: process.env.EMAILUSER,
+      to: email,
+      subject: "Interview Scheduled",
+      text: `Hello ${username},\n\nyour interview with ${interviewerName} is schedulled at: $${scheduledTime}`});
+      
+    console.log("Notification email sent:", info.messageId);
+    return true;
+    
+  } catch (error) {
+    console.error("unable to send the schedule mail", error);
+    return false;
+  }
 }
 
 export const sendSms = async( mobileNumber:string, otp:string): Promise<boolean> =>{
