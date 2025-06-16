@@ -10,7 +10,8 @@ import interviewRouter from "./route/inteviewRouter";
 import authRouter from "./route/authRouter"
 import userRouter from "./route/userRouter";
 import feedbackRouter from "./route/feedbackRouter"
-import commentRouter from "./route/commentRouter"
+import commentRouter from "./route/commentRouter";
+import notificationRouter from "./route/notificationRouter"
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use("/api/auth", authRouter)
 app.use("/api/user", userRouter)
 app.use("/api/feedback", feedbackRouter)
 app.use("/api/comment", commentRouter)
+app.use("/api/notification", notificationRouter)
 
 const server = http.createServer(app);
 
