@@ -10,7 +10,9 @@ class RedisClient {
     this.client = new Redis({
       host: process.env.REDIS_HOST || "127.0.0.1",
       port: parseInt(process.env.REDIS_PORT || "6379"),
-    });
+      maxRetriesPerRequest:null
+    }
+  );
 
     this.client.on("error", (error: any) => {
       console.error("Error while connecting to Redis:", error.message);

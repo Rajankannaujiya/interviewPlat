@@ -6,7 +6,7 @@ const router = Router();
 router.get("/", getAllMyInterviews);
 router.get("/:interviewId", getInterviewById);
 router.post("/create", createInterview);
-router.post("/:interviewId/reschedule", rescheduleInterview)
+router.post("/reschedule", rescheduleInterview)
 router.patch("/:interviewerId/status", updateInterviewStatus);
 router.delete("/:interviewId", deleteInterview);
 

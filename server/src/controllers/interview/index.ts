@@ -2,6 +2,7 @@ import { Response, Request } from "express";
 import { prisma } from '../../db/db.index'
 import { InterViewStatus, Prisma } from "@prisma/client";
 import { sendInteviewScheduleMail, sendSms } from "../../utils/smsAndMails/config";
+import bullMqWorker from "../../utils/worker/notificationWorker";
 
 
 export const createInterview = async (req: Request, res: Response): Promise<void> => {
@@ -164,15 +165,13 @@ export const deleteInterview = async (req: Request, res: Response): Promise<void
 
 
 export const rescheduleInterview = async (req: Request, res: Response): Promise<void> => {
-    const { interviewId } = req.params;
-    const { newDateTime } = req.body;
+    const { interviewId, newDateTime } = req.body;
 
     if (!newDateTime || !interviewId) {
         res.status(400).json({ error: 'newDateTime is required' });
         return;
     }
 
-    const formattedTime = new Date(newDateTime).toLocaleString()
 
     try {
 
@@ -202,59 +201,33 @@ export const rescheduleInterview = async (req: Request, res: Response): Promise<
         });
 
         // Create notifications for both users
-        const notifications: Prisma.NotificationCreateManyInput[] | undefined = [
-            {
-                type: 'RESCHEDULE',
-                recipientId: interview.candidateId,
-                message: `Your interview has been rescheduled to ${new Date(newDateTime).toLocaleString()}`,
-                status: 'PENDING',
-                channel: interview?.candidate?.isEmailVerified ? "EMAIL" : "SMS",
-            },
-            {
-                type: 'RESCHEDULE',
-                recipientId: interview.interviewerId,
-                message: `An interview you're scheduled to conduct has been rescheduled to ${new Date(newDateTime).toLocaleString()}`,
-                status: 'PENDING',
-                channel: interview.interviewr.isEmailVerified ? "EMAIL" : "SMS",
-            },
-        ];
+        const [candidateNotification, interviewerNotification] = await Promise.all([
+            prisma.notification.create({
+                data: {
+                    type: 'RESCHEDULE',
+                    recipientId: interview.candidateId,
+                    message: `Your interview has been rescheduled to ${new Date(newDateTime).toLocaleString()}`,
+                    status: 'PENDING',
+                    channel: interview?.candidate?.isEmailVerified ? "EMAIL" : "SMS",
+                }
+            }),
+            prisma.notification.create({
+                data: {
+                    type: 'RESCHEDULE',
+                    recipientId: interview.interviewerId,
+                    message: `An interview you're scheduled to conduct has been rescheduled to ${new Date(newDateTime).toLocaleString()}`,
+                    status: 'PENDING',
+                    channel: interview.interviewr.isEmailVerified ? "EMAIL" : "SMS"
+                }
+            })
+        ])
 
-
-
-        await prisma.notification.createMany({
-            data: notifications
-        });
-
-        // (Optional) Send actual emails or SMS here (not shown)
-
-        if (interview.candidate) {
-            if (interview.candidate.isEmailVerified && interview.candidate.email) {
-                await sendInteviewScheduleMail(
-                    "Interview Scheduled",
-                    `Hello ${interview.candidate.username},\n\nYour interview with ${interview.interviewr.username} has been rescheduled to ${formattedTime}`,
-                    interview.candidate.email
-                );
-            } else if (interview.candidate.isMobileVerified && interview.candidate.mobileNumber) {
-                await sendSms(
-                    `Hello ${interview.candidate.username}, your interview with ${interview.interviewr.username} has been rescheduled to ${formattedTime}`,
-                    interview.candidate.mobileNumber
-                );
-            }
+        if (candidateNotification) {
+            await bullMqWorker.addNotificationToQueue(candidateNotification.id);
         }
 
-        if (interview.interviewr) {
-            if (interview.interviewr.isEmailVerified && interview.interviewr.email) {
-                await sendInteviewScheduleMail(
-                    "Interview Scheduled",
-                    `Hello ${interview.interviewr.username},\n\nAn interview you're scheduled to conduct has been rescheduled to ${formattedTime}`,
-                    interview.interviewr.email
-                );
-            } else if (interview.interviewr.isMobileVerified && interview.interviewr.mobileNumber) {
-                await sendSms(
-                    `Hello ${interview.interviewr.username}, an interview you're scheduled to conduct has been rescheduled to ${formattedTime}`,
-                    interview.interviewr.mobileNumber
-                );
-            }
+        if (interviewerNotification) {
+            await bullMqWorker.addNotificationToQueue(interviewerNotification.id);
         }
         res.status(200).json({
             message: 'Interview rescheduled and notifications created.',
