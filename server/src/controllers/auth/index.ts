@@ -35,10 +35,7 @@ export const sendSignUpOtpToEmail = async (req: Request, res: Response): Promise
 
     const key = `otp:${email}`
     const ttl = 300;
-    await redisClient.connect();
-
     await redisClient.setEx(key, ttl, hashedOtp);
-    await redisClient.disconnect();
     if (!await sendOtpNotification(email, otp)) {
       res.status(401).json({ error: "Unable to send email" })
       return
@@ -60,7 +57,6 @@ export const verifyemailotp = async (req: Request, res: Response): Promise<void>
   const key = `otp:${email}`;
 
   try {
-    await redisClient.connect()
     const storedHashOtp = await redisClient.get(key);
 
     if (!storedHashOtp) {
@@ -83,7 +79,6 @@ export const verifyemailotp = async (req: Request, res: Response): Promise<void>
     }
 
     await redisClient.del(key)
-    await redisClient.disconnect()
     const user = await prisma.user.update({
       where: { email },
       data: { isEmailVerified: true }
@@ -124,13 +119,11 @@ export const sendLoginotpEmail = async (req: Request, res: Response): Promise<vo
     const saltRounds = 10;
     const hashedOtp = await bcrypt.hash(otp, saltRounds);
 
-    await redisClient.connect()
     const key = `otp:${email}`
     const ttl = 300;
 
 
     await redisClient.setEx(key, ttl, hashedOtp);
-    await redisClient.disconnect()
 
     if (!await sendOtpNotification(email, otp)) {
       res.status(401).json({ error: "Unable to send email" })
@@ -178,7 +171,6 @@ export const sendSignUpOtpToMobile = async (req: Request, res: Response): Promis
 
     const otp: string = await generateOTP();
 
-    await redisClient.connect();
     const saltRounds = 10;
     const hashedOtp = await bcrypt.hash(otp, saltRounds);
 
@@ -187,7 +179,6 @@ export const sendSignUpOtpToMobile = async (req: Request, res: Response): Promis
     const ttl = 300;
 
     await redisClient.setEx(key, ttl, hashedOtp);
-    await redisClient.disconnect();
 
     if (!await sendSms(mobileNumber, otp)) {
       res.status(401).json({ error: "Unable to send email" })
@@ -209,7 +200,6 @@ export const verifymobileotp = async (req: Request, res: Response): Promise<void
   const key = `otp:${mobileNumber}`;
 
   try {
-    await redisClient.connect();
     const storedHashOtp = await redisClient.get(key);
 
     if (!storedHashOtp) {
@@ -231,7 +221,6 @@ export const verifymobileotp = async (req: Request, res: Response): Promise<void
       return
     }
     await redisClient.del(key)
-    await redisClient.disconnect();
     const user = await prisma.user.update({
       where: { mobileNumber },
       data: { isMobileVerified: true }
@@ -264,7 +253,7 @@ export const sendLoginotpMobile = async (req: Request, res: Response): Promise<v
 
     const otp: string = await generateOTP();
 
-    await redisClient.connect();
+
     const saltRounds = 10;
     const hashedOtp = await bcrypt.hash(otp, saltRounds);
 
@@ -273,8 +262,9 @@ export const sendLoginotpMobile = async (req: Request, res: Response): Promise<v
     const ttl = 300;
 
     await redisClient.setEx(key, ttl, hashedOtp);
-    await redisClient.disconnect();
-    if (!await sendSms(mobileNumber, otp)) {
+
+    const sms = await sendSms(mobileNumber, `Hello, your verification code for interviewPlat is: ${otp}`);
+    if (!sms) {
       res.status(401).json({ error: "Unable to send email" })
       return
     }
@@ -303,7 +293,6 @@ export const resendOtpEmail = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    await redisClient.connect();
     const key = `otp:${email}`;
     const cooldownKey = `otp_cooldown:${email}`;
 
@@ -321,7 +310,6 @@ export const resendOtpEmail = async (req: Request, res: Response): Promise<void>
 
     await redisClient.setEx(key, ttl, hashedOtp);
     await redisClient.setEx(cooldownKey, 60, '1');
-    await redisClient.disconnect()
 
     if (!await sendOtpNotification(email, otp)) {
       res.status(401).json({ error: "Unable to send email" })
@@ -358,7 +346,7 @@ export const resendOtpMobile = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    await redisClient.connect();
+
 
     const key = `otp:${mobileNumber}`;
     const cooldownKey = `otp_cooldown:${mobileNumber}`;
@@ -377,8 +365,8 @@ export const resendOtpMobile = async (req: Request, res: Response): Promise<void
 
     await redisClient.setEx(key, ttl, hashedOtp);
     await redisClient.setEx(cooldownKey, 60, '1');
-    await redisClient.disconnect();
-    if (!await sendSms(mobileNumber, otp)) {
+    const sms = await sendSms(mobileNumber, `Hello, your verification code for interviewPlat is: ${otp}`);
+    if (!sms) {
       res.status(401).json({ error: "Unable to send email" })
       return
     }

@@ -101,5 +101,4 @@ enum InterViewStatus {
   ONGOING
   COMPLETED
   CANCELLED
-
 }

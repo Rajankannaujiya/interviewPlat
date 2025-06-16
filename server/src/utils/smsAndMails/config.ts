@@ -58,14 +58,14 @@ try {
 }
 }
 
-export const sendInteviewScheduleMail = async(email:string, username:string,interviewerName: string, scheduledTime: string): Promise<boolean> =>{
+export const sendInteviewScheduleMail = async(subject: string, text:string, email:string): Promise<boolean> =>{
 
   try {
    const info = await transporter.sendMail({
       from: process.env.EMAILUSER,
       to: email,
-      subject: "Interview Scheduled",
-      text: `Hello ${username},\n\nyour interview with ${interviewerName} is schedulled at: $${scheduledTime}`});
+      subject: subject,
+      text: text});
       
     console.log("Notification email sent:", info.messageId);
     return true;
@@ -76,10 +76,10 @@ export const sendInteviewScheduleMail = async(email:string, username:string,inte
   }
 }
 
-export const sendSms = async( mobileNumber:string, otp:string): Promise<boolean> =>{
+export const sendSms = async( mobileNumber:string, body:string): Promise<boolean> =>{
  try {
     await client.messages.create({
-      body: `Hello, your verification code for interviewPlat is: ${otp}`,
+      body: body,
       messagingServiceSid: process.env.TWILIO_SERVICE,
       to: mobileNumber
     })

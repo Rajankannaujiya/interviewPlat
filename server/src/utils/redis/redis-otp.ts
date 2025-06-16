@@ -1,57 +1,61 @@
 import dotenv from "dotenv";
-import { createClient, RedisClientType } from "redis";
+import Redis from "ioredis";
 dotenv.config();
 
-class RedisClient{
-    private client:RedisClientType;
-   
-    constructor(){
-        this.client = createClient({
-           url:`redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`
-        });
-        
-        this.client.on('orror', (error:any)=>{
-            console.log("error while connecting to the redis client", error.message)
-        });
+class RedisClient {
+  private static instance: RedisClient;
+  private client: Redis;
+
+  private constructor() {
+    this.client = new Redis({
+      host: process.env.REDIS_HOST || "127.0.0.1",
+      port: parseInt(process.env.REDIS_PORT || "6379"),
+      maxRetriesPerRequest:null
     }
+  );
 
-    async connect():Promise<void>{
-     try {
-           if(!this.client.isOpen){
-             await  this.client.connect();
-             console.log("client is connected");
-           }
-     } catch (error:any) {
-        console.log("error connecting to client", error?.message)
-     }
+    this.client.on("error", (error: any) => {
+      console.error("Error while connecting to Redis:", error.message);
+    });
+
+    this.client.on("connect", () => {
+      console.log("Redis client connected.");
+    });
+  }
+
+  public static getInstance(): RedisClient {
+    if (!RedisClient.instance) {
+      RedisClient.instance = new RedisClient();
     }
+    return RedisClient.instance;
+  }
 
-    async setEx(key: string, ttlSeconds: number, value: string):Promise<void>{
-        await this.client.setEx(key, ttlSeconds, value);
-    }
+  public async setEx(key: string, ttlSeconds: number, value: string): Promise<void> {
+    await this.client.set(key, value, "EX", ttlSeconds);
+  }
 
-    async get(key:string):Promise<string | null>{
-        return await this.client.get(key);
-    }
+  public async get(key: string): Promise<string | null> {
+    return await this.client.get(key);
+  }
 
+  public async ttl(key: string): Promise<number> {
+    return await this.client.ttl(key);
+  }
 
-    async ttl(key:string):Promise<number | null>{
-        return await this.client.ttl(key);
-    }
+  public async del(key: string): Promise<void> {
+    await this.client.del(key);
+  }
 
+  public async disconnect(): Promise<void> {
+    await this.client.quit();
+  }
 
-    async del(key:string):Promise<void>{
-        await this.client.del(key);
-    }
-
-    async disconnect():Promise<void>{
-        this.client.destroy();
-    }
+  public getRawClient(): Redis {
+    return this.client;
+  }
 }
 
-
-const redisClient = new RedisClient();
-
-export type RedisClientTypeInstance = RedisClient;
+const redisClient = RedisClient.getInstance();
 
 export default redisClient;
+export type { Redis };
