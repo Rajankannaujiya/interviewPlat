@@ -1,8 +1,9 @@
 import { Response, Request } from "express";
 import { prisma } from '../../db/db.index'
-import { InterViewStatus, Prisma } from "@prisma/client";
 import { sendInteviewScheduleMail, sendSms } from "../../utils/smsAndMails/config";
 import bullMqWorker from "../../utils/worker/notificationWorker";
+import { statusSchema } from "../../zod/schema";
+
 
 
 export const createInterview = async (req: Request, res: Response): Promise<void> => {
@@ -116,32 +117,58 @@ export const getInterviewById = async (req: Request, res: Response): Promise<voi
 
 export const updateInterviewStatus = async (req: Request, res: Response): Promise<void> => {
     const { interviewerId } = req.params;
-    console.log(req.body)
     const { status } = req.body;
 
+    const parsedStatus = statusSchema.parse(status)
 
-    if (!Object.values(InterViewStatus).includes(status)) {
-        res.status(400).json({ message: "Invalid status" });
-        return;
-    }
     try {
         const updatedInterview = await prisma.interview.update({
-            where: {
-                id: interviewerId
-            },
-            data: {
-                status: status
-            }
-        })
+            where: { id: interviewerId },
+            data: { status:parsedStatus.status }
+        });
 
-        res.status(201).json({ message: "inteview updated successfully", updatedInterview: updatedInterview });
-        return
+        if (parsedStatus.status  === "CANCELLED") {
+            const [candidate, interviewer] = await Promise.all([
+                prisma.user.findUnique({ where: { id: updatedInterview.candidateId } }),
+                prisma.user.findUnique({ where: { id: updatedInterview.interviewerId } })
+            ]);
+
+            if (candidate) {
+                const notification = await prisma.notification.create({
+                    data: {
+                        type: "CANCELLATION",
+                        status: "PENDING",
+                        channel: candidate.isEmailVerified ? "EMAIL" : "SMS",
+                        recipientId: candidate.id,
+                        message: `Your interview has been cancelled by ${interviewer?.username}`,
+                    }
+                });
+                await bullMqWorker.addNotificationToQueue(notification.id);
+            }
+
+            if (interviewer) {
+                const notification = await prisma.notification.create({
+                    data: {
+                        type: "CANCELLATION",
+                        status: "PENDING",
+                        channel: interviewer.isEmailVerified ? "EMAIL" : "SMS",
+                        recipientId: interviewer.id,
+                        message: `You cancelled the interview with ${candidate?.username}`,
+                    }
+                });
+                await bullMqWorker.addNotificationToQueue(notification.id);
+            }
+        }
+
+        res.status(201).json({
+            message: "Interview updated successfully",
+            updatedInterview
+        });
     } catch (error: any) {
-        console.log(error.message)
-        res.status(500).json({ error: 'Failed to update interview status' });
-        return;
+        console.error(error.message);
+        res.status(500).json({ error: "Failed to update interview status" });
     }
-}
+};
 
 export const deleteInterview = async (req: Request, res: Response): Promise<void> => {
 
@@ -183,6 +210,7 @@ export const rescheduleInterview = async (req: Request, res: Response): Promise<
         // Update interview date
 
         const blockedStatuses = ["CANCELLED", "COMPLETED", "ONGOING"];
+
 
         if (blockedStatuses.includes(checkStatus?.status ?? "")) {
             res.status(400).json({ error: `Cannot reschedule interview because it is already ${checkStatus?.status}` });

@@ -1,10 +1,14 @@
 
 import { z} from "zod";
-import { NotificationType, NotificationChannel  } from "@prisma/client";
+import { NotificationType, NotificationChannel, InterViewStatus  } from "@prisma/client";
 
 export const OtpSchema = z.object({
     to:z.string(),
     otp:z.string()
+})
+
+export const statusSchema = z.object({
+  status: z.nativeEnum(InterViewStatus)
 })
 
 export const notificationPayloadSchema = z.object({
