@@ -15,7 +15,6 @@ email String? @unique
 mobileNumber String? @unique
 isEmailVerified Boolean @default(false)
 isMobileVerified Boolean @default(false)
-password String?
 profileUrl String?
 role Role @default(CANDIDATE)
 notification Notification[]

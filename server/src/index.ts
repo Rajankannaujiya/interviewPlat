@@ -2,7 +2,8 @@ import express from "express";
 import http from "http";
 import dotenv from "dotenv";
 import cors from "cors";
-import { setUpWebsocketServer } from "./websocket.js";
+import { setUpWebsocketServer } from "./websocket";
+import asyncHandler from "express-async-handler";
 
 
 // routers
@@ -12,6 +13,7 @@ import userRouter from "./route/userRouter";
 import feedbackRouter from "./route/feedbackRouter"
 import commentRouter from "./route/commentRouter";
 import notificationRouter from "./route/notificationRouter"
+import { userMiddleWare } from "./middleware/userMiddleWare.js";
 
 dotenv.config();
 
@@ -23,8 +25,8 @@ app.get("/", (req, res) => {
 res.send("Hi from backend");
 });
 
-app.use("/api/interview", interviewRouter);
 app.use("/api/auth", authRouter)
+app.use("/api/interview", asyncHandler(userMiddleWare),  interviewRouter);
 app.use("/api/user", userRouter)
 app.use("/api/feedback", feedbackRouter)
 app.use("/api/comment", commentRouter)
