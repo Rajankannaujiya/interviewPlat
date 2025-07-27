@@ -3,7 +3,7 @@ import { createInterview, deleteInterview, getAllMyInterviews, getInterviewById,
 
 const router = Router();
 
-router.get("/", getAllMyInterviews);
+router.get("/:userId", getAllMyInterviews);
 router.get("/:interviewId", getInterviewById);
 router.post("/create", createInterview);
 router.post("/reschedule", rescheduleInterview)

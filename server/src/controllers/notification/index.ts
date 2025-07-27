@@ -2,8 +2,7 @@ import { Response, Request } from "express";
 import { prisma } from '../../db/db.index'
 
 export const getMyNotifications = async (req: Request, res: Response):Promise<void> => {
-    const { candidateId } = req.body;
-
+    const { candidateId } = req.params;
     try {
 
         const notifications = await prisma.notification.findMany({
@@ -11,10 +10,7 @@ export const getMyNotifications = async (req: Request, res: Response):Promise<vo
                 recipientId: candidateId
             }
         })
-        res.status(200).json({
-            message: 'notifications fetched successfully',
-            notifications: notifications
-        });
+        res.status(200).json(notifications);
         return;
     } catch (error: any) {
         console.error('fetching notifications failed:', error?.message);

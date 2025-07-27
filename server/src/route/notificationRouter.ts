@@ -4,8 +4,8 @@ import { deleteMyNotifications, getMyNotifications } from "../controllers/notifi
 
 const router = Router();
 
-router.get("/", getMyNotifications);
-router.delete("/", deleteMyNotifications)
+router.get("/:candidateId", getMyNotifications);
+router.delete("/:candidateId", deleteMyNotifications)
 
 
 export default router;

@@ -1,6 +1,5 @@
 import { Response, Request } from "express";
 import { prisma } from '../../db/db.index'
-import { sendInteviewScheduleMail, sendSms } from "../../utils/smsAndMails/config";
 import bullMqWorker from "../../utils/worker/notificationWorker";
 import { statusSchema } from "../../zod/schema";
 
@@ -30,20 +29,35 @@ export const createInterview = async (req: Request, res: Response): Promise<void
             return;
         }
 
-        if (candidate.email && interviewer.email) {
-            await sendInteviewScheduleMail(
-                "Interview Scheduled",
-                `Hello ${candidate.username},\n\nyour interview with ${interviewer.username} is scheduled at: ${new Date(scheduledTime).toLocaleString()}`,
-                candidate.email
-            );
+        // Create notifications for both users
+        const [candidateNotification, interviewerNotification] = await Promise.all([
+            prisma.notification.create({
+                data: {
+                    type: 'SCHEDULED',
+                    recipientId: interview.candidateId,
+                    message: `Your interview with ${interviewer.username} has been scheduled to ${new Date(scheduledTime).toLocaleString()}`,
+                    status: 'PENDING',
+                    channel: candidate?.isEmailVerified ? "EMAIL" : "SMS",
+                }
+            }),
+            prisma.notification.create({
+                data: {
+                    type: 'SCHEDULED',
+                    recipientId: interview.interviewerId,
+                    message: `You scheduled an interview with ${candidate.username} on ${new Date(scheduledTime).toLocaleString()}`,
+                    status: 'PENDING',
+                    channel: interviewer?.isEmailVerified ? "EMAIL" : "SMS"
+                }
+            })
+        ])
 
-            await sendInteviewScheduleMail(
-                "Interview Scheduled",
-                `Hello ${interviewer.username},\n\nyou schedule an interview with ${candidate.username} at: ${new Date(scheduledTime).toLocaleString()}`,
-                interviewer.email
-            )
+        if (candidateNotification) {
+            await bullMqWorker.addNotificationToQueue(candidateNotification.id);
         }
 
+        if (interviewerNotification) {
+            await bullMqWorker.addNotificationToQueue(interviewerNotification.id);
+        }
         res.status(201).json({ message: "inteview created successfully", interview: interview });
         return
 
@@ -54,7 +68,7 @@ export const createInterview = async (req: Request, res: Response): Promise<void
 }
 
 export const getAllMyInterviews = async (req: Request, res: Response): Promise<void> => {
-    const { userId } = req.body;
+    const { userId } = req.params;
 
     try {
 

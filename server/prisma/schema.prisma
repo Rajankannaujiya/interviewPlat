@@ -23,6 +23,8 @@ updatedAt DateTime @updatedAt
 interviewsAsInterviewer Interview[] @relation("UserAsInterviewer")
 interviewsAsCandidate Interview[] @relation("UserAsCandidate")
 comments Comment[]
+sentMessages      Message[] @relation("SentMessages")
+receivedMessages  Message[] @relation("ReceivedMessages")
 }
 
 model Interview {
@@ -72,6 +74,17 @@ createdAt DateTime @default(now())
 sentAt DateTime?
 }
 
+model Message {
+  id String @id @default(cuid())
+  content String
+  senderId String
+  receiverId String
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id])
+  recipient User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
 enum NotificationStatus {
 PENDING
 SENT
@@ -84,6 +97,7 @@ SMS
 }
 
 enum NotificationType {
+SCHEDULED
 REMINDER
 RESCHEDULE
 CANCELLATION

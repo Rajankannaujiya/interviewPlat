@@ -1,6 +1,7 @@
-
+import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import twilio from "twilio"
+dotenv.config();
 
 
 export async function generateOTP() {

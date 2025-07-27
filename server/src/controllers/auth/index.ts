@@ -18,7 +18,7 @@ export const sendSignUpOtpToEmail = async (req: Request, res: Response): Promise
   try {
     let user = await prisma.user.findUnique({ where: { email } });
     if (user) {
-      res.status(400).json({ error: "user already exist" });
+      res.status(409).json({ error: "user already exist" });
       return
     };
     user = await prisma.user.create({
@@ -53,7 +53,8 @@ export const sendSignUpOtpToEmail = async (req: Request, res: Response): Promise
 
 
 export const verifyemailotp = async (req: Request, res: Response): Promise<void> => {
-  const { email, submittedOtp } = req.body;
+  const { email, otp } = req.body;
+  console.log(email,otp)
   const key = `otp:${email}`;
 
   try {
@@ -63,7 +64,7 @@ export const verifyemailotp = async (req: Request, res: Response): Promise<void>
       res.status(400).json({ error: 'No OTP sent or Otp expired' })
       return;
     };
-    const isMatch = await bcrypt.compare(submittedOtp, storedHashOtp);
+    const isMatch = await bcrypt.compare(otp, storedHashOtp);
     if (!isMatch) {
       res.status(400).json({ error: 'Invalid OTP' });
       return;
@@ -157,7 +158,7 @@ export const sendSignUpOtpToMobile = async (req: Request, res: Response): Promis
   try {
     let user = await prisma.user.findUnique({ where: { mobileNumber } });
     if (user) {
-      res.status(400).json({ error: 'user is already registered' })
+      res.status(409).json({ error: 'user is already registered' })
 
       return;
     };
@@ -196,7 +197,8 @@ export const sendSignUpOtpToMobile = async (req: Request, res: Response): Promis
 
 
 export const verifymobileotp = async (req: Request, res: Response): Promise<void> => {
-  const { mobileNumber, submittedOtp } = req.body;
+  const { mobileNumber, otp } = req.body;
+  console.log(req.body)
   const key = `otp:${mobileNumber}`;
 
   try {
@@ -206,7 +208,7 @@ export const verifymobileotp = async (req: Request, res: Response): Promise<void
       res.status(400).json({ error: 'No OTP sent or Otp expired' })
       return;
     };
-    const isMatch = await bcrypt.compare(submittedOtp, storedHashOtp);
+    const isMatch = await bcrypt.compare(otp, storedHashOtp);
     if (!isMatch) {
       res.status(400).json({ error: 'Invalid OTP' });
       return;
@@ -223,7 +225,7 @@ export const verifymobileotp = async (req: Request, res: Response): Promise<void
     await redisClient.del(key)
     const user = await prisma.user.update({
       where: { mobileNumber },
-      data: { isMobileVerified: true }
+      data: { isMobileVerified: true },
     });
 
 

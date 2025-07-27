@@ -9,11 +9,13 @@ import asyncHandler from "express-async-handler";
 // routers
 import interviewRouter from "./route/inteviewRouter";
 import authRouter from "./route/authRouter"
-import userRouter from "./route/userRouter";
+// import userRouter from "./route/userRouter";
 import feedbackRouter from "./route/feedbackRouter"
 import commentRouter from "./route/commentRouter";
 import notificationRouter from "./route/notificationRouter"
-import { userMiddleWare } from "./middleware/userMiddleWare.js";
+import userRouter from "./route/userRouter"
+
+import { userMiddleWare } from "./middleware/userMiddleWare";
 
 dotenv.config();
 
@@ -26,11 +28,12 @@ res.send("Hi from backend");
 });
 
 app.use("/api/auth", authRouter)
-app.use("/api/interview", asyncHandler(userMiddleWare),  interviewRouter);
-app.use("/api/user", userRouter)
+app.use("/api/interview",  interviewRouter);
+// app.use("/api/user", userRouter)
 app.use("/api/feedback", feedbackRouter)
 app.use("/api/comment", commentRouter)
 app.use("/api/notification", notificationRouter)
+app.use("/api/users",userMiddleWare, userRouter);
 
 const server = http.createServer(app);
 

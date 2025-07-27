@@ -10,14 +10,13 @@ wss.on("connection",(ws:WebSocket)=>{
 
     console.log("connection established");
 
-    ws.on("message", (message: string)=>{
+    ws.on("message", (data: string)=>{
 
-        try {
-            
-            const data = JSON.parse(message)
+        try {   
+            const message = JSON.parse(data)
             console.log("this is the data",data)
         } catch (error) {
-            
+            console.log("an error occured in data message",error)
         }
        
     });
