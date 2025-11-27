@@ -6,12 +6,13 @@ import { statusSchema } from "../../zod/schema";
 
 
 export const createInterview = async (req: Request, res: Response): Promise<void> => {
-    const { interviewerId, candidateId, scheduledTime } = req.body;
+    const { interviewerId, candidateId, scheduledTime, title } = req.body;
 
     try {
 
         const interview = await prisma.interview.create({
             data: {
+                title,
                 interviewerId,
                 candidateId,
                 scheduledTime: new Date(scheduledTime),
@@ -35,7 +36,7 @@ export const createInterview = async (req: Request, res: Response): Promise<void
                 data: {
                     type: 'SCHEDULED',
                     recipientId: interview.candidateId,
-                    message: `Your interview with ${interviewer.username} has been scheduled to ${new Date(scheduledTime).toLocaleString()}`,
+                    message: `Your interview with ${interviewer.username} has been scheduled to ${new Date(scheduledTime).toLocaleString()} for ${title}`,
                     status: 'PENDING',
                     channel: candidate?.isEmailVerified ? "EMAIL" : "SMS",
                 }
@@ -44,7 +45,7 @@ export const createInterview = async (req: Request, res: Response): Promise<void
                 data: {
                     type: 'SCHEDULED',
                     recipientId: interview.interviewerId,
-                    message: `You scheduled an interview with ${candidate.username} on ${new Date(scheduledTime).toLocaleString()}`,
+                    message: `You scheduled an interview with ${candidate.username} on ${new Date(scheduledTime).toLocaleString()} for ${title}`,
                     status: 'PENDING',
                     channel: interviewer?.isEmailVerified ? "EMAIL" : "SMS"
                 }
@@ -131,20 +132,74 @@ export const getInterviewById = async (req: Request, res: Response): Promise<voi
 
 export const updateInterviewStatus = async (req: Request, res: Response): Promise<void> => {
     const { interviewerId } = req.params;
-    const { status } = req.body;
+    const { status, updateAll } = req.body; // 'updateAll' flag for bulk updates
 
-    const parsedStatus = statusSchema.parse(status)
+    const parsedStatus = statusSchema.parse({status});
 
     try {
+        // ✅ CASE 1: Update all interviews (bulk update)
+        if (updateAll === true) {
+            const updatedInterviews = await prisma.interview.updateMany({
+                data: { status: parsedStatus.status },
+            });
+
+            // Fetch all interviews after update for notifications
+            const allUpdated = await prisma.interview.findMany({
+                where: { status: parsedStatus.status },
+            });
+
+            if (parsedStatus.status === "CANCELLED") {
+                for (const interview of allUpdated) {
+                    const [candidate, interviewer] = await Promise.all([
+                        prisma.user.findUnique({ where: { id: interview.candidateId } }),
+                        prisma.user.findUnique({ where: { id: interview.interviewerId } }),
+                    ]);
+
+                    if (candidate) {
+                        const notification = await prisma.notification.create({
+                            data: {
+                                type: "CANCELLATION",
+                                status: "PENDING",
+                                channel: candidate.isEmailVerified ? "EMAIL" : "SMS",
+                                recipientId: candidate.id,
+                                message: `Your interview has been cancelled by ${interviewer?.username}`,
+                            },
+                        });
+                        await bullMqWorker.addNotificationToQueue(notification.id);
+                    }
+
+                    if (interviewer) {
+                        const notification = await prisma.notification.create({
+                            data: {
+                                type: "CANCELLATION",
+                                status: "PENDING",
+                                channel: interviewer.isEmailVerified ? "EMAIL" : "SMS",
+                                recipientId: interviewer.id,
+                                message: `You cancelled the interview with ${candidate?.username}`,
+                            },
+                        });
+                        await bullMqWorker.addNotificationToQueue(notification.id);
+                    }
+                }
+            }
+
+            res.status(200).json({
+                message: "All interviews updated successfully",
+                count: updatedInterviews.count,
+            });
+            return
+        }
+
+        // ✅ CASE 2: Update a single interview (your original logic)
         const updatedInterview = await prisma.interview.update({
             where: { id: interviewerId },
-            data: { status:parsedStatus.status }
+            data: { status: parsedStatus.status },
         });
 
-        if (parsedStatus.status  === "CANCELLED") {
+        if (parsedStatus.status === "CANCELLED") {
             const [candidate, interviewer] = await Promise.all([
                 prisma.user.findUnique({ where: { id: updatedInterview.candidateId } }),
-                prisma.user.findUnique({ where: { id: updatedInterview.interviewerId } })
+                prisma.user.findUnique({ where: { id: updatedInterview.interviewerId } }),
             ]);
 
             if (candidate) {
@@ -155,7 +210,7 @@ export const updateInterviewStatus = async (req: Request, res: Response): Promis
                         channel: candidate.isEmailVerified ? "EMAIL" : "SMS",
                         recipientId: candidate.id,
                         message: `Your interview has been cancelled by ${interviewer?.username}`,
-                    }
+                    },
                 });
                 await bullMqWorker.addNotificationToQueue(notification.id);
             }
@@ -168,21 +223,23 @@ export const updateInterviewStatus = async (req: Request, res: Response): Promis
                         channel: interviewer.isEmailVerified ? "EMAIL" : "SMS",
                         recipientId: interviewer.id,
                         message: `You cancelled the interview with ${candidate?.username}`,
-                    }
+                    },
                 });
                 await bullMqWorker.addNotificationToQueue(notification.id);
             }
         }
 
-        res.status(201).json({
+        res.status(200).json({
             message: "Interview updated successfully",
-            updatedInterview
+            updatedInterview,
         });
     } catch (error: any) {
         console.error(error.message);
         res.status(500).json({ error: "Failed to update interview status" });
     }
 };
+
+
 
 export const deleteInterview = async (req: Request, res: Response): Promise<void> => {
 

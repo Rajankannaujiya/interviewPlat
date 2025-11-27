@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { CustomDivForAuth } from '../CustomComp'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Label from '../Label'
 import Input from '../Input'
 import { Button } from '../CustomComp'
@@ -17,22 +17,25 @@ type SignupEmailProps = {
 
 const SignupEmail = ({ setVerifyMode }: SignupEmailProps) => {
 
-  const [emailInfo, setEmailInfo
-
-  ] = useState("");
+  const [emailInfo, setEmailInfo] = useState("");
   const [userName, setUserName] = useState("");
   const [role, setRole] = useState<Role>("CANDIDATE");
   const navigate = useNavigate();
 
 const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 
-const matchemail = emailInfo.match(emailRegex)
+const matchemail = emailInfo.match(emailRegex);
+
 
   const [createUserWithEmail, { data, isError, isLoading}] = useCreateUserWithEmailMutation();
   
-    const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
 
-  console.log(data, isError, isLoading);
+
+
+  const location = useLocation();
+  const pathname = location.pathname;
+
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -56,6 +59,7 @@ const matchemail = emailInfo.match(emailRegex)
     }
     }
   }
+
 
 
   return (
@@ -87,7 +91,13 @@ const matchemail = emailInfo.match(emailRegex)
       </div>
 
       <div className='flex justify-center items-center gap-2 font-serif text-lg'>
-        <CustomDivForAuth onClick={() => navigate("/login")} buttonContent='Login' paraContent={"Don't have an account?"} />
+        <CustomDivForAuth onClick={() => {
+          if(pathname.includes("interviewer")){
+            navigate("/interviewer/login")
+          }else{
+            navigate("/login");
+          }
+        }} buttonContent='Login' paraContent={"Don't have an account?"} />
       </div>
     </form>
   )

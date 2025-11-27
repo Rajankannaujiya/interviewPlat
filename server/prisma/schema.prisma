@@ -9,26 +9,28 @@ datasource db {
 
 
 model User {
-id String @id @default(cuid())
-username String
-email String? @unique
-mobileNumber String? @unique
-isEmailVerified Boolean @default(false)
-isMobileVerified Boolean @default(false)
-profileUrl String?
-role Role @default(CANDIDATE)
-notification Notification[]
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
-interviewsAsInterviewer Interview[] @relation("UserAsInterviewer")
-interviewsAsCandidate Interview[] @relation("UserAsCandidate")
-comments Comment[]
-sentMessages      Message[] @relation("SentMessages")
-receivedMessages  Message[] @relation("ReceivedMessages")
+  id String @id @default(cuid())
+  username String
+  email String? @unique
+  mobileNumber String? @unique
+  isEmailVerified Boolean @default(false)
+  isMobileVerified Boolean @default(false)
+  profileUrl String?
+  role Role[]
+  notification Notification[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  interviewsAsInterviewer Interview[] @relation("UserAsInterviewer")
+  interviewsAsCandidate Interview[] @relation("UserAsCandidate")
+  comments Comment[]
+  sentMessages      Message[] @relation("SentMessages")
+  receivedMessages  Message[] @relation("ReceivedMessages")
+  chats       Chat[]
 }
 
 model Interview {
   id String @id @default(cuid())
+  title String? @default("No title Provided")
   scheduledTime DateTime
   status InterViewStatus @default(SCHEDULED)
   feedback Feedback?
@@ -63,15 +65,15 @@ model Comment {
 }
 
 model Notification {
-id String @id @default(cuid())
-type NotificationType
-recipientId String
-recipient User @relation(fields: [recipientId], references: [id])
-message String
-status NotificationStatus @default(PENDING)
-channel NotificationChannel @default(EMAIL)
-createdAt DateTime @default(now())
-sentAt DateTime?
+  id String @id @default(cuid())
+  type NotificationType
+  recipientId String
+  recipient User @relation(fields: [recipientId], references: [id])
+  message String
+  status NotificationStatus @default(PENDING)
+  channel NotificationChannel @default(EMAIL)
+  createdAt DateTime @default(now())
+  sentAt DateTime?
 }
 
 model Message {
@@ -81,8 +83,17 @@ model Message {
   receiverId String
   sender      User     @relation("SentMessages", fields: [senderId], references: [id])
   recipient User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  chat      Chat     @relation(fields: [chatId], references: [id])
+  chatId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+}
+
+model Chat {
+  id          String   @id @default(cuid())
+  participants User[] 
+  messages    Message[]
+  createdAt   DateTime @default(now())
 }
 
 enum NotificationStatus {

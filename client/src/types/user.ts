@@ -6,7 +6,7 @@ export type Role = "INTERVIEWER" | "CANDIDATE" | "ADMIN";
 export type SingupUserEmailType = {
     email:string;
     username: string;
-    role:Role;
+    role:Role | Role[];
 } 
 
 export type SingupUserMobileType = {
@@ -47,20 +47,37 @@ export interface User{
     isEmailVerified?: boolean                                                     
     isMobileVerified?: boolean
     profileUrl?: string
-    role: Role
+    role?: Role
     notification?: Notification[] | []
     comment?:Comment
     sentMessage?: Message[] | []
     receivedMessage?: Message[] | [] 
-    createdAt: Date                                                                                   
-    updatedAt: Date
+    createdAt?: Date                                                                                   
+    updatedAt?: Date
 }
 
-interface Message {
-  id:string;
-  content:string
-  senderId:string
-  receiverId:string
-  createdAt: Date
-  updatedAt: Date
+export interface Message {
+    id:string;
+    sender?:User
+    receiver?:User
+    content:string
+    senderId:string
+    receiverId:string
+    createdAt?: Date
+    updatedAt?: Date
 }
+
+
+export interface MessageAi{
+    id:string;
+    senderId:string;
+    sender:User;
+    content:string;
+}
+
+export type ExistingChat = {
+    id:string,
+    participants: User[]
+    message: Message[]
+    createdAt: Date
+};

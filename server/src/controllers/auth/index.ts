@@ -25,7 +25,7 @@ export const sendSignUpOtpToEmail = async (req: Request, res: Response): Promise
       data: {
         email,
         username: username,
-        role: role,
+        role: [role],
       }
     });
 
@@ -54,6 +54,7 @@ export const sendSignUpOtpToEmail = async (req: Request, res: Response): Promise
 
 export const verifyemailotp = async (req: Request, res: Response): Promise<void> => {
   const { email, otp } = req.body;
+  console.log(req.body);
   console.log(email,otp)
   const key = `otp:${email}`;
 
@@ -166,7 +167,7 @@ export const sendSignUpOtpToMobile = async (req: Request, res: Response): Promis
       data: {
         mobileNumber,
         username: username,
-        role: role,
+        role: [role],
       }
     });
 

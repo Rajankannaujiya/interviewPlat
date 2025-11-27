@@ -8,8 +8,6 @@ export const interviewApi = createApi({
     const user = localStorage.getItem('persist:auth');
     const parsedToken = JSON.parse(user!).token;
 
-    console.log(parsedToken)
-
     if(parsedToken){
       header.set('authorization', `Bearer ${parsedToken}`)
     }

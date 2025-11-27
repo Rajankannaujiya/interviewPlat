@@ -15,7 +15,6 @@ const OtpToMobile = () => {
 
     const mobileNumber = useAppSelector((state) => state.otpVerify.mobileNumber);
     const otpEntered = useAppSelector((state) => state.otpVerify.otpEntered);
-    console.log("otp send to mobile number", otpEntered)
 
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
@@ -25,7 +24,6 @@ const OtpToMobile = () => {
 
     const [resendOtp, { isLoading: resendOtpLoading }] = useOtpResendToMobileMutation();
 
-    console.log("otpmobile", data, isError, isLoading);
 
     // Countdown timer for resend button
     useEffect(() => {
@@ -66,7 +64,6 @@ const OtpToMobile = () => {
     }, [isOtpSent]);
 
     const handleOtpComplete = async (otp: string) => {
-        console.log("Verifying OTP...");
         try {
             await verifyOtp({
                 mobileNumber,
@@ -88,7 +85,6 @@ const OtpToMobile = () => {
 
     const handleResendOtp = async () => {
         if (canResendOtp === 0) {
-            console.log("Resending OTP...");
             try {
                 await resendOtp({
                     mobileNumber: mobileNumber

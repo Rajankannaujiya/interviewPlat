@@ -1,10 +1,11 @@
 import { Response, Request } from "express";
 import { prisma } from '../../db/db.index'
+import { Role } from "@prisma/client";
 
 export const getAllCandidate = async(req:Request ,res:Response):Promise<any>=>{
     try {
         const candidates =await prisma.user.findMany({where:{
-            role:"CANDIDATE"
+            role: { has: Role.CANDIDATE },
         }});
         return res.status(200).json(candidates);
     } catch (error) {
@@ -16,7 +17,7 @@ export const getAllCandidate = async(req:Request ,res:Response):Promise<any>=>{
 export const getAllInterviewer = async(req:Request ,res:Response):Promise<any>=>{
     try {
         const interviewers =await prisma.user.findMany({where:{
-            role:"INTERVIEWER"
+            role:{has:Role.INTERVIEWER}
         }});
         return res.status(200).json(interviewers);
     } catch (error) {
@@ -153,52 +154,47 @@ export const searchUser = async (req: Request, res: Response): Promise<any> => {
 export const getChattedUsersWithLastMessage = async (req: Request, res: Response) => {
   const { userId } = req.params;
 
-  console.log("chatsWithuser", userId)
-
   try {
-    // 1. Fetch all messages where the user is sender or receiver
-    const messages = await prisma.message.findMany({
+    // Step 1: Get all chats where user is a participant
+    const chats = await prisma.chat.findMany({
       where: {
-        OR: [
-          { senderId: userId },
-          { receiverId: userId }
-        ]
+        participants: {
+          some: {
+            id: userId,
+          }
+        }
       },
-      orderBy: { createdAt: 'desc' }, // so latest message comes first
       include: {
-        sender: true,
-        recipient:true
+        participants: {
+          select: {
+            id: true,
+            username: true,
+            profileUrl: true
+          }
+        },
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1
+        }
       }
     });
 
-    // 2. Map to chat partner -> latest message
-    const chatMap = new Map<string, { user: any, message: any }>();
+    // Step 2: Format results to exclude current user from participants
+    const result = chats.map(chat => {
+      const otherUser = chat.participants.find(p => p.id !== userId);
 
-    for (const msg of messages) {
-      const isSender = msg.senderId === userId;
-      const otherUser = isSender ? msg.recipient : msg.sender;
-      const key = otherUser.id;
+      return {
+        chatId: chat.id,
+        user: otherUser, // the chat partner
+        message: chat.messages[0] || null // latest message or null
+      };
+    });
 
-      if (!chatMap.has(key)) {
-        chatMap.set(key, {
-          user: otherUser,
-          message: {
-            id: msg.id,
-            content: msg.content,
-            createdAt: msg.createdAt,
-            senderId: msg.senderId,
-            recipientId: msg.receiverId
-          }
-        });
-      }
-    }
-
-    const result = Array.from(chatMap.values());
     res.json(result);
-
   } catch (error) {
-    console.error("Error fetching chatted users with last message:", error);
+    console.error("Error fetching chats with last message:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 

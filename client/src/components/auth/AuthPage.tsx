@@ -19,8 +19,6 @@ type LoginPage = {
 const AuthPage = ({ headingText, formHeadEmail, formHeadMobile }: LoginPage) => {
     const [verifyMode, setVerifyMode] = useState("email");
     const isotpSent = useAppSelector(state=>state.otpVerify.isotpSent);
-    console.log(verifyMode)
-
     const location = useLocation();
     const pathname = location.pathname;
 
@@ -59,7 +57,7 @@ const AuthPage = ({ headingText, formHeadEmail, formHeadMobile }: LoginPage) => 
                     </div>
 {/* if the user want to login */}
 
-                    {(pathname === "/login") && (<div className=''>
+                    {(pathname === "/login" || pathname === "/interviewer/login") && (<div className=''>
                         {verifyMode === "email" && <EmailAuth setVerifyMode={setVerifyMode}/>}
                         {verifyMode === "mobile" && <MobileAuth setVerifyMode={setVerifyMode}/>}
                     </div>)}
@@ -67,7 +65,7 @@ const AuthPage = ({ headingText, formHeadEmail, formHeadMobile }: LoginPage) => 
 {/* if the user want to signup */}
 
                     {
-                        (pathname === "/signup" || pathname === "/") && (
+                        (pathname === "/signup" || pathname === "/" || pathname === "/interviewer/signup") && (
                             <div>
                                 {verifyMode === "email" && <SignupEmail setVerifyMode={setVerifyMode}/>}
                                 {verifyMode === "mobile" && <SignupMobile setVerifyMode={setVerifyMode}/>}

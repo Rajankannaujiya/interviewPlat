@@ -22,7 +22,6 @@ export default function NotificationPanel() {
 
   const { data:notifications, error, isLoading } = useGetMyNotificationsQuery({ candidateId: user?.id! })
 
-  console.log("isnotificationPannelOpen from the notification", notifications)
   const dispatch = useAppDispatch();
 
   if (error) {
