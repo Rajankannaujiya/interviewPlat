@@ -11,11 +11,9 @@ const DashboarLayout = ({children}:{children:React.ReactNode}) => {
   useEffect(()=>{
     if(isDarkMode){
       document.documentElement.classList.add("dark");
-      console.log("this is the output",document.documentElement.className);
     }
     else{
       document.documentElement.classList.remove("dark");
-      console.log(document.documentElement.className);
     }
   },[isDarkMode])
 

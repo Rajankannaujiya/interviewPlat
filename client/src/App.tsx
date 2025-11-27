@@ -14,6 +14,9 @@ import Profile from "./components/Profile";
 import Search from "./search/Search";
 import Interviewer from "./pages/Interviewer/Interviewer"
 import Settings from "./settings/Settings";
+import InterviewerDashboard from "./pages/Interviewer/InterviewerDashboard";
+import MyInterViews from "./pages/Interviewer/MyInterViews";
+import InterViewConsole from "./pages/Interviewer/InterViewConsole";
 
 function App() {
 
@@ -43,9 +46,16 @@ function App() {
       <Route path='/search' element={<Search/>} />
       <Route path='/settings' element={<Settings/>} />
       <Route path='/user/profile/:id' element={<Profile/>} />
-      <Route path='/interviewer' element={<Interviewer/>} />
+      <Route path='/chat/:chatId' element={<Message/>} />
 
-
+        <Route path="/interviewer" element={<Interviewer />}>
+          <Route path="dashboard" element={<InterviewerDashboard />} />
+          <Route path="interviews" element={<MyInterViews />} />
+          <Route path=":id" element={<InterViewConsole />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="login" element={<Login />} />
+          <Route path="signup" element={<SignUp />} />
+        </Route>
     </Routes>
     </BrowserRouter>
     <ToastContainer position="top-center" autoClose={3000} />

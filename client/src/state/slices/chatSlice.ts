@@ -2,11 +2,11 @@ import { createSlice } from "@reduxjs/toolkit";
 import { User } from "../../types/user";
 
 interface ChatType{
-    selectedUser: User | null
+    selectedUser: User | null,
 }
 
 const initialState:ChatType={
-    selectedUser:null
+    selectedUser:null,
 };
 
 

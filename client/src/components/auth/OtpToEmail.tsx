@@ -5,7 +5,7 @@ import { useOtpResendToEmailMutation, useVerifyEmailOtpMutation } from '../../st
 import { setIsVerrified, setOtpEntered } from '../../state/slices/auth/verifyOtpSlice';
 import { toast } from 'react-toastify';
 import { setAuthenticatedState } from '../../state/slices/auth/authSlice';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const OtpToEmail = () => {
     const [canResendOtp, setCanResendOtp] = useState(60);
@@ -15,7 +15,6 @@ const OtpToEmail = () => {
 
     const email = useAppSelector((state) => state.otpVerify.email);
     const otpEntered = useAppSelector((state) => state.otpVerify.otpEntered);
-    console.log("otp send to email", otpEntered)
 
     const dispatch = useAppDispatch();
 
@@ -24,8 +23,8 @@ const OtpToEmail = () => {
     const [verifyOtp, { data, isError, isLoading }] = useVerifyEmailOtpMutation();
     const [resendOtp, { isLoading: resendOtpLoaing }] = useOtpResendToEmailMutation();
 
-
-    console.log("otpemail", data, isError, isLoading);
+    const location = useLocation();
+    const pathname = location.pathname;
 
     // Countdown timer for resend button
     useEffect(() => {
@@ -66,7 +65,6 @@ const OtpToEmail = () => {
     }, [isOtpSent]);
 
     const handleOtpComplete = useCallback(async (otp: string) => {
-        console.log("Verifying OTP...");
         try {
             const result = await verifyOtp({
                 email,
@@ -81,12 +79,15 @@ const OtpToEmail = () => {
                 }));
                 dispatch(setIsVerrified(true));
                 toast.success("💥 Verification Successful");
+
+                if(pathname.includes("interviewer")){
+                    navigate("/interviewer/dashboard")
+                }
                 navigate("/")
                 return
 
             }
         } catch (error) {
-            console.log(error)
             toast.error("🙃 Please try again after some time");
             return
         }
@@ -94,7 +95,6 @@ const OtpToEmail = () => {
 
     const handleResendOtp = async () => {
         if (canResendOtp === 0) {
-            console.log("Resending OTP...");
             try {
                 await resendOtp({
                     email

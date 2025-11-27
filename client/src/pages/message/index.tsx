@@ -1,10 +1,22 @@
 import ChatArea from "./component/ChatArea";
 import SideContent from "./component/SideContent";
 import AiChatBot from "./component/AiChatBot";
+import { useEffect } from "react";
+import { WsInstance } from "../../ws/websocket";
+import { useAppSelector } from "../../state/hook";
 
 type Props = {};
 
 const Message = () => {
+
+  const user = useAppSelector(state=> state.auth.user)
+
+  useEffect(()=>{
+    WsInstance.connectWs("ws://localhost:3000", user?.id!) ;
+    return ()=>{
+      WsInstance.clearOnMessage(user?.id!);
+    }
+  },[])
 
   type Message = {
   id: string;
@@ -105,13 +117,13 @@ const Message = () => {
 
       {/* Chat Area */}
       <main className="hidden sm:block sm:col-span-8 lg:col-span-6 bg-white dark:bg-gray-800 shadow-md p-4 lg:border-r lg:border-gray-300 dark:lg:border-gray-700">
-        <ChatArea messages={messages}/>
+        <ChatArea />
       </main>
 
 
       {/* Ai Chat Bot */}
       <aside className="hidden lg:block lg:col-span-3 bg-white dark:bg-gray-900 shadow-md p-4">
-        <AiChatBot messages={messages}/>
+        <AiChatBot />
       </aside>
     </div>
   );

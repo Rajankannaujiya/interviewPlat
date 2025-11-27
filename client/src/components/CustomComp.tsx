@@ -18,22 +18,32 @@ export const CustomCenter = ({ className, children }: CustomCenterProps) => {
 
 
 type CustomDivForAuthProps = {
-  onClick: React.Dispatch<React.MouseEvent<HTMLElement>>
+  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
   paraContent: string;
   buttonContent: string;
-}
-export const CustomDivForAuth = ({ onClick, paraContent, buttonContent }: CustomDivForAuthProps) => {
+};
 
+export const CustomDivForAuth = ({
+  onClick,
+  paraContent,
+  buttonContent,
+}: CustomDivForAuthProps) => {
   return (
     <>
-      <p className='text-blue-950 dark:text-blue-300 mx-0 my-1 p-1 font-light'>{paraContent}</p>
-      <button type='button' className='text-blue-500 dark:text-blue-400 mx-0 my-1 p-1 font-bold cursor-pointer hover:font-semibold' onClick={onClick}>
+      <p className="text-blue-950 dark:text-blue-300 mx-0 my-1 p-1 font-light">
+        {paraContent}
+      </p>
+      <button
+        type="button"
+        className="text-blue-500 dark:text-blue-400 mx-0 my-1 p-1 font-bold cursor-pointer hover:font-semibold"
+        onClick={onClick}
+      >
         {buttonContent}
       </button>
     </>
-  )
+  );
+};
 
-}
 
 type ButtonProps = {
   type:"submit" | "reset" | "button";

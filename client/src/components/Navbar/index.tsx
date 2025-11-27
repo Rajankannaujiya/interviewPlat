@@ -1,10 +1,9 @@
 
-import { Bell, Menu, MessageSquareText, Moon, Search, Sun } from 'lucide-react';
+import { Bell, Menu, MessageSquareText, Moon, Sun } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../state/hook';
 import { toggleDarkMode } from '../../state/slices/themeSlice';
 import { setIsNotificationPanel, setSideBarOpen } from '../../state/slices/genericSlice';
 import { useNavigate } from 'react-router-dom';
-import { twMerge } from 'tailwind-merge';
 import NotificationPanel from '../../notification/NotificationPanel';
 import GenericSearch from '../../search/GenericSearch';
 
@@ -18,16 +17,12 @@ const Navbar = () => {
 
 
     const isDarkMode = useAppSelector(state => state.darkMode.isDarkMode);
-    console.log(isDarkMode)
 
     const isSideBarOpen = useAppSelector(state => state.generic.isSideBarOpen);
     const isNotificationPanelOpen = useAppSelector(state => state.generic.isNotificationPanelOpen);
 
     const dispatch = useAppDispatch();
 
-    console.log("isNotificationPannelOpen from navbar", isNotificationPanelOpen)
-
-    console.log("sidebar open", isSideBarOpen)
 
     return (
         <div className={`flex justify-between items-center w-screen p-1 shadow-sm border-b gap-8 border-bahia-300 bg-light-navbar-background dark:bg-dark-navbar-background dark:border-bahia-700 dark:border-b dark:shadow-sm`}>

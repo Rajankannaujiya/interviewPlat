@@ -2,7 +2,7 @@ import express from "express";
 import http from "http";
 import dotenv from "dotenv";
 import cors from "cors";
-import { setUpWebsocketServer } from "./websocket";
+import { setUpWebsocketServer } from "./websockets/websocket";
 import asyncHandler from "express-async-handler";
 
 
@@ -14,6 +14,7 @@ import feedbackRouter from "./route/feedbackRouter"
 import commentRouter from "./route/commentRouter";
 import notificationRouter from "./route/notificationRouter"
 import userRouter from "./route/userRouter"
+import chatRouter from "./route/chatRoute"
 
 import { userMiddleWare } from "./middleware/userMiddleWare";
 
@@ -32,7 +33,8 @@ app.use("/api/interview",  interviewRouter);
 // app.use("/api/user", userRouter)
 app.use("/api/feedback", feedbackRouter)
 app.use("/api/comment", commentRouter)
-app.use("/api/notification", notificationRouter)
+app.use("/api/notification", notificationRouter);
+app.use("/api/messages", chatRouter)
 app.use("/api/users",userMiddleWare, userRouter);
 
 const server = http.createServer(app);

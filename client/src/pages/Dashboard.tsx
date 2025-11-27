@@ -6,9 +6,8 @@ import AllMeetings from "../components/AllMeetings"
 import Graph from "../components/Graph"
 import Card from "../components/Card"
 import Loading from "../components/Loading"
+import OngoingInterviewCard from "../components/OngoingInterviewCard"
 
-
-type Props = {}
 
 const Dashboard = () => {
 
@@ -20,11 +19,10 @@ const Dashboard = () => {
 
 const {data, isError, isLoading} = useGetAllMyInterviewsQuery({userId: userAuthState.user?.id!}, {skip: !userAuthState.isAuthenticated || !userAuthState.user?.id });
 
-console.log(data, userAuthState.isAuthenticated)
 
 const noOfInterviewTaken: number = data?.myinterviews
   ? data.myinterviews.filter(
-      (interview) => interview.interviewerId === userAuthState.user?.id
+      (interview) => interview.status==="COMPLETED" && interview.interviewerId === userAuthState.user?.id
     ).length
   : 0;
 
@@ -72,10 +70,10 @@ if(isError){
           </Card>
         </div>
 
+    <OngoingInterviewCard />
         <div className="text-dark-background bg-white">
           {data && <Graph data={data?.myinterviews} />}
         </div>
-
         <div className="flex flex-col text-black mb-5">
           {data && <AllMeetings data={data?.myinterviews} />}
         </div>

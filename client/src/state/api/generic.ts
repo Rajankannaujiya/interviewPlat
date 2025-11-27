@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { Notification } from "../../types/notification";
-import { User } from "../../types/user";
+import { ExistingChat, Message, User } from "../../types/user";
 
 export const genericApi = createApi({
   reducerPath: 'genericApi',
@@ -8,7 +8,6 @@ export const genericApi = createApi({
     const user = localStorage.getItem('persist:auth');
     const parsedToken = JSON.parse(user!).token;
 
-    console.log(parsedToken)
 
     if(parsedToken){
       header.set('authorization', `Bearer ${parsedToken}`)
@@ -31,7 +30,7 @@ export const genericApi = createApi({
       })
     }),
 
-    getChattedUsersWithLastMessage: build.query<User[], {userId:string}>({
+    getChattedUsersWithLastMessage: build.query<any, {userId:string}>({
         query:({userId})=>({
           url:`/users/chatsWith/${userId}`
         })
@@ -46,9 +45,32 @@ export const genericApi = createApi({
       query:({userId})=>({
         url:`/users/${userId}`
       })
+    }),
+
+    createChat: build.mutation<ExistingChat, {senderId:string, receiverId:string}>({
+      query:(body)=>({
+        url:`/messages/createChat`,
+        method: 'POST',
+        body,
+      })
+    }),
+
+    findChatByChatId:build.query<Message[], {chatId:string}>({
+      query: ({chatId})=>({
+        url:`/messages/findChat/${chatId}`,
+        method: 'GET'
+      })
+    }),
+
+    geminiAiResponse: build.mutation<string, {contents:string}>({
+      query:({contents})=>({
+        url:`/messages/geminiAiResponse`,
+        method: 'POST',
+        body:{contents}
+      })
     })
 
     })
 })
 
-export const { useGetAllUsersSearchQuery, useGetMyNotificationsQuery, useGetChattedUsersWithLastMessageQuery, useGetAllUsersQuery , useGetUserByIdQuery} = genericApi;
+export const { useGetAllUsersSearchQuery, useGetMyNotificationsQuery, useGetChattedUsersWithLastMessageQuery, useGetAllUsersQuery , useGetUserByIdQuery, useCreateChatMutation, useFindChatByChatIdQuery, useGeminiAiResponseMutation} = genericApi;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Label from '../Label'
 import Input from '../Input'
 import {Button} from '../CustomComp'
@@ -19,10 +19,10 @@ const LoginMobile = ({setVerifyMode}: MobileProps) => {
       
         const dispatch = useAppDispatch();
         const navigate = useNavigate();
+        const location = useLocation();
+        const pathname = location.pathname;
 
         const [loginWithMobile, {data, isError, isLoading}] = useLoginUserWithMobileMutation();
-        
-          console.log(data, isError, isLoading);
         
           const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             e.preventDefault();
@@ -53,7 +53,14 @@ const LoginMobile = ({setVerifyMode}: MobileProps) => {
             </div>
 
             <div className='flex justify-center items-center gap-2 font-serif text-lg'>
-                <CustomDivForAuth onClick={()=>navigate("/signup")} buttonContent='SingUp' paraContent={"Don't have an account?"}/>
+                <CustomDivForAuth onClick={()=>{
+                  if(pathname.includes("interviewer")){
+                    navigate("/interviewer/signup");
+                  }
+                  else{
+                    navigate("/signup");
+                  }
+                }} buttonContent='SingUp' paraContent={"Don't have an account?"}/>
             </div>
         </form>
     )

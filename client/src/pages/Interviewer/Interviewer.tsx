@@ -1,11 +1,12 @@
-import React from 'react'
 
-type Props = {}
+import { Outlet } from "react-router-dom";
 
-const Interviewer = (props: Props) => {
+const Interviewer = () => {
   return (
-    <div>Interviewer</div>
-  )
-}
+    <div className="flex flex-col min-h-screen">
+      <Outlet />
+    </div>
+  );
+};
 
-export default Interviewer
+export default Interviewer;

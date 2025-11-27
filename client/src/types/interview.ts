@@ -6,6 +6,7 @@ export type TypeInterviewStatus = "SCHEDULED" | "ONGOING"  | "COMPLETED" | "CANC
 
 export interface Interview {
   id:string;
+  title: string
   scheduledTime:Date;
   status: TypeInterviewStatus;
   feedback: Feedback;

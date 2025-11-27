@@ -22,7 +22,7 @@ const authSlice = createSlice({
         
         setAuthenticatedState: (state, action: PayloadAction<AuthState | null>)=>{
            if(action.payload){
-             state.user = action.payload?.user;
+             state.user = action.payload?.user as any;
             state.isAuthenticated=action.payload?.isAuthenticated
             state.token = action.payload?.token
            }
