@@ -23,3 +23,16 @@ export interface GetAllMyInterviewsResponse {
   message: string;
   myinterviews: Interview[] | [];
 }
+
+export interface createInterviewProps{
+  title?: string,
+  interviewerId: string,
+  candidateId: string,
+  scheduledTime: string,
+}
+
+export interface rescheduleInterviewProps{
+  title?:string,
+  interviewId: string,
+  newDateTime: string,
+}

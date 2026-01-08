@@ -70,7 +70,9 @@ if(isError){
           </Card>
         </div>
 
-    <OngoingInterviewCard />
+      <div className=" flex justify-center">
+        <OngoingInterviewCard />
+      </div>
         <div className="text-dark-background bg-white">
           {data && <Graph data={data?.myinterviews} />}
         </div>

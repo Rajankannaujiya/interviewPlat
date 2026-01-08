@@ -198,3 +198,40 @@ export const getChattedUsersWithLastMessage = async (req: Request, res: Response
 };
 
 
+export const updateUserProfile = async (req: Request, res: Response): Promise<any> => {
+  const { username, email, mobileNumber, imageUrl } = req.body;
+
+  try {
+    if (!username) {
+      return res.status(400).json({ message: "Username is required to identify user" });
+    }
+    const user = await prisma.user.findFirst({
+      where: {
+        username,
+        OR: [
+          email ? { email } : undefined,
+          mobileNumber ? { mobileNumber } : undefined,
+        ].filter(Boolean) as any[],
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const updatedData: any = {};
+    if (email) updatedData.email = email;
+    if (mobileNumber) updatedData.mobileNumber = mobileNumber;
+    if (imageUrl) updatedData.profileUrl = imageUrl;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: updatedData,
+    });
+
+    return res.status(200).json(updatedUser);
+  } catch (error: any) {
+    console.error('Error updating user:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+

@@ -7,9 +7,11 @@ import Loading from "../../components/Loading";
 import Card from "../../components/Card";
 import { CustomCenter } from "../../components/CustomComp";
 import CompletedInterviewDetails from "../../components/CompletedInterViewDetail";
+import { useNavigate } from "react-router-dom";
 
 const MyInterviews = () => {
   const userAuthState = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
 
   if (!userAuthState || (!userAuthState.isAuthenticated && !userAuthState.user)) {
     toast.error("☠️ Please login");
@@ -39,7 +41,7 @@ const MyInterviews = () => {
     interviews: Interview[],
     highlightOngoing = false
   ) => (
-    <Card className="bg-light-background rounded-2xl shadow-md p-5 m-2 border dark:bg-dark-background border-gray-100 hover:shadow-lg transition-all">
+    <Card className="bg-light-background rounded-2xl shadow-md p-5 m-2 border dark:bg-dark-background border-gray-100 hover:shadow-sm transition-all">
       {/* Section Header */}
       <div className="flex items-center justify-between mb-4 border-b pb-2">
         <div className="flex items-center gap-2">
@@ -54,7 +56,7 @@ const MyInterviews = () => {
       </div>
 
       {/* Section Content */}
-      <div className="max-h-[400px] overflow-y-auto pr-2">
+      <div className="max-h-[400px] overflow-y-auto pr-2 ">
         {interviews.length === 0 ? (
           <p className="text-gray-400 text-sm text-center py-4">No interviews found.</p>
         ) : (
@@ -65,7 +67,7 @@ const MyInterviews = () => {
                 className={`p-4 rounded-xl border flex justify-between items-center transition-all cursor-pointer ${
                   highlightOngoing
                     ? "bg-green-50 border-green-400 shadow-sm animate-pulse"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-900"
+                    : "hover:bg-gray-50 dark:hover:bg-gray-800"
                 }`}
               >
                 {/* Left Section */}
@@ -106,11 +108,6 @@ const MyInterviews = () => {
   return (
     <CustomCenter className="flex flex-col justify-start w-full max-h-screen overflow-y-auto scrollbar-hide dark:bg-dark-background bg-light-background dark:text-gray-100 px-2 sm:px-4">
 
-
-      <h1 className="text-2xl font-bold dark:text-gray-100 text-gray-800 mb-6">
-        My Interviews
-      </h1>
-
      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
     {renderSection("Ongoing Interviews", <PlayCircle className="text-green-600" size={22} />, { bg: "bg-green-100", text: "text-green-700" }, ongoing, true)}
 
@@ -130,12 +127,33 @@ const MyInterviews = () => {
     </details>
 
     {/* Visible on larger screens */}
-    <div className="hidden md:block">{renderSection("Scheduled Interviews", <Calendar className="text-blue-500" size={22} />, { bg: "bg-blue-100", text: "text-blue-700" }, scheduled)}</div>
+    
+    <div className="flex flex-col">
+    {/* This section renders the list of scheduled interviews */}
+    <div className="hidden md:block">
+        {renderSection(
+            "Scheduled Interviews", 
+            <Calendar className="text-blue-500" size={22} />, 
+            { bg: "bg-blue-100", text: "text-blue-700" }, 
+            scheduled
+        )}
+    </div>
+    
+</div>
     <div className="hidden md:block">{renderSection("Completed Interviews", <CheckCircle className="text-gray-600" size={22} />, { bg: "bg-gray-100", text: "text-gray-700" }, completed)}</div>
     <div className="hidden md:block">{renderSection("Cancelled Interviews", <RefreshCcw className="text-yellow-500" size={22} />, { bg: "bg-yellow-100", text: "text-yellow-700" }, cancelled)}</div>
   </div>
 
-
+    {/* Conditional Button: Only show if there are scheduled interviews */}
+    {scheduled && scheduled.length > 0 && (
+        <div className="mt-2 max-w-full m-auto flex gap-x-52" onClick={()=>navigate("/interviewer/interview/update")}> {/* Positioning the button */}
+            <button className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75">
+                Want to Cancell Any Interview
+            </button>
+        </div>
+    )}
+    
+    
     <div className="w-full m-2 h-[1px] border-0 bg-gray-300 dark:bg-gray-700"></div>
 
       <div className="w-full mb-12">

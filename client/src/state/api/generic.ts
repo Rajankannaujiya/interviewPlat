@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { Notification } from "../../types/notification";
+import { Feedback, Notification } from "../../types/notification";
 import { ExistingChat, Message, User } from "../../types/user";
 
 export const genericApi = createApi({
@@ -68,9 +68,18 @@ export const genericApi = createApi({
         method: 'POST',
         body:{contents}
       })
+    }),
+
+    updateUsersInformation: build.mutation<string, {username:string, email?:string, mobileNumber?:string, imageUrl?:string}>({
+      query:({username, email, mobileNumber, imageUrl}) =>({
+        url: "users/profile/update",
+        method: "PUT",
+        body: {username, email, mobileNumber, imageUrl}
+      })
     })
 
-    })
+    }),
+
 })
 
-export const { useGetAllUsersSearchQuery, useGetMyNotificationsQuery, useGetChattedUsersWithLastMessageQuery, useGetAllUsersQuery , useGetUserByIdQuery, useCreateChatMutation, useFindChatByChatIdQuery, useGeminiAiResponseMutation} = genericApi;
+export const { useGetAllUsersSearchQuery, useGetMyNotificationsQuery, useGetChattedUsersWithLastMessageQuery, useGetAllUsersQuery , useGetUserByIdQuery, useCreateChatMutation, useFindChatByChatIdQuery, useGeminiAiResponseMutation, useUpdateUsersInformationMutation} = genericApi;

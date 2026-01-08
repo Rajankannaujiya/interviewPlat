@@ -18,7 +18,7 @@ const GenericSearch = () => {
 
   const shouldFetch = debouncedSearch.trim().length >= 3;
 
-  const { data, isLoading, isError } = useGetAllUsersSearchQuery(
+  const { data, isLoading } = useGetAllUsersSearchQuery(
     { query: debouncedSearch, userId: user?.id ?? '' },
     { skip: !shouldFetch || !user?.id }
   );

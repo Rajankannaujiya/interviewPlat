@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllCandidate, getAllInterviewer, getAllUsers, getChattedUsersWithLastMessage, getUserById, searchUser } from "../controllers/user";
+import { getAllCandidate, getAllInterviewer, getAllUsers, getChattedUsersWithLastMessage, getUserById, searchUser, updateUserProfile } from "../controllers/user";
 
 
 const router = Router();
@@ -10,6 +10,7 @@ router.get("/search",searchUser)
 router.get("/chatsWith/:userId", getChattedUsersWithLastMessage);
 router.get("/allUsers", getAllUsers);
 router.get("/:userId", getUserById);
+router.put("/profile/update", updateUserProfile)
 
 
 export default router;

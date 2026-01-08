@@ -1,7 +1,7 @@
 import { webRTCType } from "../../../types/message";
 import { WebSocketManager, WsInstance } from "../../../ws/websocket";
 import { toast } from "react-toastify";
-import { createPeerConnection, handleCandidate, iceCandidateBufferReceived, pc, startWebRTCConnection } from "./webrtc";
+import { closePeerConnection, createDataChannel, createPeerConnection, handleCandidate, iceCandidateBufferReceived, pc, startWebRTCConnection } from "./webrtc";
 
 function getPersistedAuth() {
   try {
@@ -77,6 +77,10 @@ export function handleWebRTCMessageEvent(
         handleCandidate(message);
         break;
 
+      case "LEAVE":
+        handleDisconnection(currentUserId,message);
+        break;
+
       default:
         console.warn("⚠️ Unknown WebRTC action:", webrtcRequestType);
     }
@@ -109,6 +113,7 @@ async function handleOffer(
     return;
   }
 
+   await createDataChannel(false);
   await peerConnection.setRemoteDescription(sdp);
 
   const answer = await peerConnection.createAnswer();
@@ -127,8 +132,7 @@ export async function handleAnswer(
   const { sdp } = message.payload;
   if (!sdp ) return;
 
-  const peerConnection = pc;
-  if (!peerConnection) {
+  if (!pc) {
     alert("Peer connection (pc) not found in handleAnswer");
     return;
   }
@@ -148,6 +152,23 @@ export async function handleAnswer(
   } catch (error) {
     console.error("Error handling ANSWER:", error);
   }
+}
+
+export async function handleDisconnection(currentUserId:string, message:webRTCType){
+  const msg:webRTCType ={
+    type: "webrtc_connection",
+    payload: {
+      action: "LEAVE",
+      userId: currentUserId,
+      interviewId: message.payload.interviewId
+    },
+    isBothParticipantPresent: message.isBothParticipantPresent,
+    role:message.role
+  }
+  WsInstance.send(msg);
+  closePeerConnection();
+  window.location.href = "/";
+  // window.location.reload();
 }
 
 

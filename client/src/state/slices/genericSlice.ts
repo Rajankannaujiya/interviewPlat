@@ -4,14 +4,16 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 interface GenericType{
     isSideBarOpen: boolean,
     isNotificationPanelOpen: boolean,
-    isSearchOpen:boolean
+    isSearchOpen:boolean;
+    isChatBotOpen :boolean;
 }
 
 
 const initialState: GenericType ={
     isSideBarOpen: false,
     isNotificationPanelOpen:false,
-    isSearchOpen:false
+    isSearchOpen:false,
+    isChatBotOpen: false,
 }
  
 const GenericSlice = createSlice({
@@ -26,10 +28,13 @@ const GenericSlice = createSlice({
         },
         setIsSearchOpen: (state, action: PayloadAction<boolean>)=>{
             state.isSearchOpen = action.payload
+        },
+        toggleOpenChatBot: (state)=>{
+            state.isChatBotOpen = !state.isChatBotOpen
         }
     }
 })
 
-export const {setSideBarOpen, setIsNotificationPanel, setIsSearchOpen}  = GenericSlice.actions;
+export const {setSideBarOpen, setIsNotificationPanel, setIsSearchOpen, toggleOpenChatBot}  = GenericSlice.actions;
 
 export default GenericSlice.reducer;

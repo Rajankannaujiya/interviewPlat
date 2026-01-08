@@ -14,6 +14,8 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
                 content:content
             }
         })
+
+        console.log(comment);
         
         res.status(201).json({ message: "comment created successfully", comment: comment });
         return
@@ -23,6 +25,7 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
     }
 }
 
+// no need for this already getting in the interview
 export const getAllComment = async (req: Request, res: Response): Promise<void> =>{
     const { interviewId } = req.params;
 

@@ -16,7 +16,7 @@ export class WebSocketManager {
 
     this.socket = new WebSocket(url);
 
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       this.socket!.onopen = () => {
         console.log("✅ Connected to WebSocket server");
         this.socket!.send(

@@ -64,6 +64,7 @@ export const createInterview = async (req: Request, res: Response): Promise<void
 
     } catch (error) {
         res.status(500).json({ error: 'Failed to create interview' });
+        console.log(error)
         return;
     }
 }
@@ -263,9 +264,11 @@ export const deleteInterview = async (req: Request, res: Response): Promise<void
 
 
 export const rescheduleInterview = async (req: Request, res: Response): Promise<void> => {
-    const { interviewId, newDateTime } = req.body;
+    const { interviewId, title, newDateTime } = req.body;
 
-    if (!newDateTime || !interviewId) {
+    console.log("I am here", req.body)
+
+    if (!newDateTime || !title || !interviewId) {
         res.status(400).json({ error: 'newDateTime is required' });
         return;
     }
@@ -291,6 +294,7 @@ export const rescheduleInterview = async (req: Request, res: Response): Promise<
         const interview = await prisma.interview.update({
             where: { id: interviewId },
             data: {
+                title,
                 scheduledTime: new Date(newDateTime),
             },
             include: {

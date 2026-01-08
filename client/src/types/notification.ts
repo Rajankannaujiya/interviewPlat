@@ -17,12 +17,12 @@ sentAt?: Date
 
 
 export interface Feedback {
-  id: string;
+  id?: string;
   interviewId: string;
-  rating: number;
-  note: string;
-  interview: Interview
-  createdAt: Date
+  rating?: number;
+  note?: string;
+  interview?: Interview
+  createdAt?: Date
 }
 
 export interface Comment {

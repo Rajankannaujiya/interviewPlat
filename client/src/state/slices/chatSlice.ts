@@ -3,10 +3,12 @@ import { User } from "../../types/user";
 
 interface ChatType{
     selectedUser: User | null,
+    selectedInterviewId: string | null
 }
 
 const initialState:ChatType={
     selectedUser:null,
+    selectedInterviewId: null
 };
 
 
@@ -16,9 +18,13 @@ const chatSlice = createSlice({
     reducers: {
         setSelectedUser: (state, action)=>{
             state.selectedUser = action.payload
+        },
+
+        setSelectedInterviewId:(state, action)=>{
+            state.selectedInterviewId = action.payload
         }
     }
 })
 
-export const { setSelectedUser } = chatSlice.actions;
+export const { setSelectedUser, setSelectedInterviewId } = chatSlice.actions;
 export default chatSlice.reducer;
