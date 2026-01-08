@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { EmailOtpVerifyType, MobileOtpVerifyType, Email, Mobile, SingupUserEmailType, SingupUserMobileType, VerifyOtpResponse } from '../../types/user';
+import { EmailOtpVerifyType, MobileOtpVerifyType, Email, Mobile, SingupUserEmailType, SingupUserMobileType, VerifyOtpResponse, User } from '../../types/user';
 
 
 
@@ -70,7 +70,6 @@ export const authApi = createApi({
         body:mobileNumber
       })
     }),
-
   }),
 })
 

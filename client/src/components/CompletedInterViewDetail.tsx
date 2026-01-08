@@ -1,44 +1,58 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useAppSelector } from "../state/hook";
-import { useGetAllMyInterviewsQuery } from "../state/api/interview";
-import { MessageSquare, Star, Clock, User } from "lucide-react";
+import {
+  useGetAllMyInterviewsQuery,
+  useGetInterviewFeebBackQuery,
+} from "../state/api/interview";
+import { MessageSquare, Star, Clock } from "lucide-react";
 import Loading from "../components/Loading";
 import Card from "../components/Card";
 import { Interview } from "../types/interview";
-
+import { Feedback } from "../types/notification";
+import Comment, { CommentItem } from "./Comment";
 
 const CompletedInterviewDetails = () => {
+
+  const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const userAuthState = useAppSelector((state) => state.auth);
 
-  if (!userAuthState || (!userAuthState.isAuthenticated && !userAuthState.user)) {
+  if (!userAuthState || !userAuthState.isAuthenticated || !userAuthState.user) {
     toast.error("☠️ Please login");
   }
 
+  // Fetch interviews
   const { data, isError, isLoading } = useGetAllMyInterviewsQuery(
     { userId: userAuthState.user?.id! },
     { skip: !userAuthState.isAuthenticated || !userAuthState.user?.id }
   );
 
   const completedInterviews = data?.myinterviews?.filter(
-    (i) => i.status === "COMPLETED"
+    (i: Interview) => i.status === "COMPLETED"
   );
 
-  let extendedInterviews:Interview[] =[];
-  if (completedInterviews && completedInterviews.length > 0) {
-  extendedInterviews = [
-    ...completedInterviews,
-    ...Array(9).fill(completedInterviews[0])
-  ];
-  // Now use extendedInterviews instead of completedInterviews
-}
-
+  completedInterviews?.map(i=>console.log("completed interview",i))
   const [openId, setOpenId] = useState<string | null>(null);
 
-  if (isLoading) return <Loading />;
-  if (isError)
-    return <p className="text-center text-red-500">Failed to load interviews.</p>;
+  // Fetch feedback dynamically for each open item
+  const { data: feedbackData, isLoading: isFeedbackLoading } =
+    useGetInterviewFeebBackQuery(
+      { interviewId: openId || "" },
+      { skip: !openId }
+    );
 
+  useEffect(() => {
+  if (feedbackData) {
+    setSelectedFeedback(feedbackData);
+  }
+}, [feedbackData]);
+
+console.log(selectedFeedback);
+  if (isLoading || isFeedbackLoading) return <Loading />;
+  if (isError )
+    return (
+      <p className="text-center text-red-500">Failed to load interviews.</p>
+    );
   if (!completedInterviews || completedInterviews.length === 0)
     return (
       <div className="flex justify-center items-center h-64 text-gray-500">
@@ -53,7 +67,7 @@ const CompletedInterviewDetails = () => {
       </h1>
 
       <div className="space-y-4 overflow-auto max-h-[80vh] scrollbar-hide pr-2">
-        {extendedInterviews.map((interview) => (
+        {completedInterviews.map((interview) => (
           <Card
             key={interview.id + Math.random()}
             className="border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm dark:bg-gray-900 bg-white transition-all hover:shadow-md"
@@ -91,58 +105,55 @@ const CompletedInterviewDetails = () => {
             {openId === interview.id && (
               <div className="mt-4 border-t pt-4 space-y-3">
                 {/* Feedback Section */}
-                {interview.feedback ? (
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Star className="text-yellow-500" size={18} />
-                      <h3 className="font-medium text-gray-700 dark:text-gray-200">
-                        Feedback
-                      </h3>
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-300">
-                      <strong>Rating:</strong> {interview.feedback.rating}/5
-                    </p>
-                    <p className="text-gray-600 dark:text-gray-300">
-                      <strong>Note:</strong> {interview.feedback.note}
-                    </p>
+                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Star className="text-yellow-500" size={18} />
+                    <h3 className="font-medium text-gray-700 dark:text-gray-200">
+                      Feedback
+                    </h3>
                   </div>
-                ) : (
-                  <p className="text-gray-400 italic">No feedback provided.</p>
-                )}
+
+                  {isFeedbackLoading ? (
+                    <p className="text-gray-400 italic">Loading feedback…</p>
+                  ) : selectedFeedback && selectedFeedback.interview?.feedback ? (
+                    <>
+                      <p className="text-gray-600 dark:text-gray-300">
+                        <strong>Rating:</strong> {selectedFeedback?.interview?.feedback.rating}
+                      </p>
+                      <p className="text-gray-600 dark:text-gray-300">
+                        <strong>Note:</strong> {selectedFeedback.interview?.feedback.note}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-gray-400 italic">No feedback provided.</p>
+                  )}
+                </div>
 
                 {/* Comments Section */}
                 <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-2">
                     <MessageSquare className="text-blue-500" size={18} />
                     <h3 className="font-medium text-gray-700 dark:text-gray-200">
                       Comments
                     </h3>
                   </div>
+
                   {interview.Comment.length > 0 ? (
-                    <ul className="space-y-2">
-                      {interview.Comment.map((comment:any) => (
-                        <li
-                          key={comment.id}
-                          className="p-2 border-l-4 border-blue-400 bg-white dark:bg-gray-900 rounded-md shadow-sm"
-                        >
-                          <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-300">
-                            <div className="flex items-center gap-1">
-                              <User size={14} />
-                              {comment?.author?.username || "Anonymous"}
-                            </div>
-                            <span>
-                              {new Date(comment.createdAt).toLocaleString()}
-                            </span>
-                          </div>
-                          <p className="text-gray-700 dark:text-gray-100 mt-1">
-                            {comment.content}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-400 italic">No comments available.</p>
-                  )}
+    <ul className="space-y-2">
+      {interview.Comment.map((comment: any) => (
+        <CommentItem
+          key={comment.id}
+          comment={comment}
+          interview={interview}
+          loggedInUserId={userAuthState.user?.id!}
+        />
+      ))}
+    </ul>
+  ) : (
+    <p className="text-gray-400 italic">No comments available.</p>
+  )}
+
+                  <Comment interviewId={openId} authorId={userAuthState.user?.id!} />
                 </div>
               </div>
             )}

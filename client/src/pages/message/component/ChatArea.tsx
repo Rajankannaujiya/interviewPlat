@@ -15,7 +15,7 @@ const ChatArea = () => {
   const user = useAppSelector(state => state.auth.user);
   const { chatId } = useParams();
   const selectedUser = useAppSelector(state => state.chat.selectedUser);
-  const { data: initialMessages, isLoading, isError } = useFindChatByChatIdQuery({ chatId:chatId! });
+  const { data: initialMessages, isLoading } = useFindChatByChatIdQuery({ chatId:chatId! });
 
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -36,8 +36,10 @@ const ChatArea = () => {
 
   const registerHandler = () => {
     WsInstance.onMessage((message) => {
+      console.log(message && message.type)
       switch (message.type) {
         case "new_message":
+          console.log("inside newMassage")
           handleNewMessage(message);
           break;
           
@@ -64,6 +66,7 @@ const ChatArea = () => {
 
 
 function handleNewMessage(message:newMessageType){
+  console.log("inside handleNewMessage")
   setMessages((prev) => [...prev, message.payload]);
 }
 

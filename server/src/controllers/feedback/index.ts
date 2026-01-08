@@ -62,11 +62,13 @@ export const getInterviewFeedback = async (req: Request, res: Response): Promise
             }
         })
 
+        console.log("feedback with interveiw", interview)
+
         if (!interview) {
             res.status(404).json({ message: "Interview not found" });
             return
         }
-
+        
         res.status(201).json({ message: "inteview with feedback fetched successfully", interview: interview });
         return
 

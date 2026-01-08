@@ -4,7 +4,7 @@ import { submitFeedback, getInterviewFeedback, deleteFeedback} from "../controll
 const router = Router();
 
 router.get("/:interviewId", getInterviewFeedback);
-router.put("/:interviewId/feedback", submitFeedback);
+router.put("/:interviewId", submitFeedback);
 router.delete("/:feedbackId", deleteFeedback);
 
 export default router;

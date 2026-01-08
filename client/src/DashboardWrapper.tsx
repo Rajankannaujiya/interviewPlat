@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar"
 import { useAppSelector } from './state/hook';
 import { Provider } from 'react-redux';
 import { store } from './state/store';
+import GlobalChatWrapper from './GlobalChatWrapper';
 
 const DashboarLayout = ({children}:{children:React.ReactNode}) => {
   const isDarkMode = useAppSelector((state)=>state.darkMode.isDarkMode);
@@ -19,9 +20,6 @@ const DashboarLayout = ({children}:{children:React.ReactNode}) => {
 
   return (
     <div className='flex min-h-screen w-full bg-gray-50 text-gray-900'>
-
-        {/* sidebar */}
-        {/* <Sidebar /> */}
         <main className={`flex w-full flex-co`}>
 
             <Navbar/>

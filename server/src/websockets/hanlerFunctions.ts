@@ -21,7 +21,7 @@ export async function handleMessage(data:RawData, ws:WebSocket){
         return;
     }
 
-
+    console.log(parsed);
     const result = messageSchema.safeParse(parsed);
     if (!result.success) {
         console.error("Invalid message schema", result.error);
@@ -40,10 +40,6 @@ export async function handleMessage(data:RawData, ws:WebSocket){
 
             case "exit_chat":
                 handleExitChat(message, ws);
-                break;
-
-            case "ai_msg":
-                handleAiChat(message, ws);
                 break;
 
             case "webrtc_connection":
@@ -147,68 +143,6 @@ export function handleExitChat(message:TypeExitChatSchema, ws:WebSocket) {
         }
     } catch (error) {
         console.log("An error occured in handleExitChat", error);   
-    }
-}
-
-export async function handleAiChat(message:TypeAiChatSchema, ws:WebSocket){
-    let thoughts = "";
-    let answer = "";
-    const {contents, senderId} = message.payload;
-     try {
-        const response = await ai.models.generateContentStream({
-            model: "gemini-2.5-flash",
-            contents: contents as string,
-            config: {
-                thinkingConfig: {
-                    includeThoughts: true,
-                },
-            },
-        });
-
-        for await (const chunk of response) {
-        const candidate = chunk.candidates?.[0];
-        const content = candidate?.content;
-
-            if (!content?.parts) continue;
-
-            for (const part of content.parts) {
-                if (!part.text) {
-                    continue;
-                }
-                else if (part.thought) {
-                    if (!thoughts) {
-                        console.log("Thoughts summary:");
-                    }
-                    console.log("thought",part.text);
-                    thoughts += part.text;
-                }
-                else {
-                    if (!answer) {
-                        console.log("No answerAnswer:");
-                    }
-                    console.log("answer", part.text);
-                    answer += part.text;
-                }
-            }
-        }
-        // ws to send answer
-        const foundWs = clients.get(senderId);
-        if(foundWs){
-            const data = {
-                type: "ai_msg",
-                payload:{
-                    sender: "ai",
-                    senderId,
-                    contents,
-                    answer
-                }
-            }
-            console.log("I am here")
-            ws.send(JSON.stringify(data));
-        }
-
-    }  catch (error:any) {
-        console.error("An error occured in the handleAiChat", error.message)
     }
 }
 

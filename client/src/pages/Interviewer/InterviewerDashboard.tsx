@@ -33,12 +33,13 @@ const InterviewerDashboard = () => {
   return (
    <CustomCenter className="flex flex-col justify-start items-center w-full h-screen overflow-y-auto scrollbar-hide dark:bg-dark-background bg-light-background dark:text-gray-100 px-2 sm:px-4 ">
 
-      {/* Ongoing Interviews */}
       <OngoingInterviewCard />
 
-      {/* Graph Section */}
-      <Graph data={[]} />
-      {/* Scheduled Interviews */}
+      <div className="w-full flex-1">
+  <Graph data={interviews} />
+</div>
+
+
       <div className="w-full max-w-3xl bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl mb-20">
         <div className="flex items-center justify-between mb-6 border-b pb-3 border-gray-200 dark:border-gray-700">
           <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">

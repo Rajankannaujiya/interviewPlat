@@ -85,7 +85,6 @@ export const verifyemailotp = async (req: Request, res: Response): Promise<void>
       where: { email },
       data: { isEmailVerified: true }
     });
-
      if (!await sentWelcomeNotification(email, user.username)) {
       res.status(401).json({ error: "Unable to send Welcome email" })
       return

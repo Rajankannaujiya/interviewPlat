@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import { GetAllMyInterviewsResponse } from '../../types/interview';
+import { createInterviewProps, GetAllMyInterviewsResponse, rescheduleInterviewProps, TypeInterviewStatus } from '../../types/interview';
 import { User } from '../../types/user';
+import { Feedback } from '../../types/notification';
 
 export const interviewApi = createApi({
   reducerPath: 'interview',
@@ -34,8 +35,71 @@ export const interviewApi = createApi({
       })
     }),
 
+    submitFeedBack: build.mutation<any, {data:Feedback}>({
+      query:({data})=>({
+        url: `/feedback/${data.interviewId}`,
+        method: 'PUT',
+        body:data
+      })
+    }),
+
+    getInterviewFeebBack: build.query<Feedback, {interviewId: string}>({
+      query:({interviewId})=>({
+        url: `/feedback/${interviewId}`,
+        method: 'GET'
+      })
+    }),
+
+    addComment: build.mutation<any, { interviewId: string; authorId: string; content: string }>({
+      query: ({ interviewId, authorId, content }) => ({
+        url: `/comment/`,
+        method: "POST",
+        body: { interviewId, authorId, content }
+      })
+    }),
+
+    updateComment: build.mutation< void, {commentId:string, content:string}>({
+      query: ({ commentId, content }) => ({
+        url: `/comment/update`,
+        method: "PUT",
+        body: {commentId, content },
+      })
+    }),
+
+    deleteComment: build.mutation< void, {commentId:string}>({
+      query: ({ commentId }) => ({
+        url: `/comment/${commentId}`,
+        method: "DELETE",
+      })
+    }),
+
+    updateInterviewStatus: build.mutation<void, {interviewId:string | null, status:TypeInterviewStatus, updateAll: boolean}>({
+      query: ({ interviewId, status, updateAll }) => ({
+        url: updateAll
+          ? `/interview/update-all`
+          : `/interview/update/${interviewId}`,
+        method: "PATCH",
+        body: { status, updateAll },
+      }),
+    }),
+
+    createInterview: build.mutation<void,{data: createInterviewProps}>({
+      query: ({data}) => ({
+        url: "/interview/create",
+        method: "POST",
+        body: data,
+      }),
+    }),
+
+    rescheduleInterview: build.mutation<any, {data: rescheduleInterviewProps}>({
+      query: ({ data }) => ({
+      url: `/interview/reschedule`,
+      method: "PUT",
+      body: data,
+      }),
+    }),
     })
 })
 
-export const {useGetAllMyInterviewsQuery, useGetAllCandidateQuery, useGetAllInterviewerQuery} = interviewApi
+export const {useGetAllMyInterviewsQuery, useGetAllCandidateQuery, useGetAllInterviewerQuery, useSubmitFeedBackMutation, useGetInterviewFeebBackQuery, useAddCommentMutation, useUpdateCommentMutation, useDeleteCommentMutation, useUpdateInterviewStatusMutation, useCreateInterviewMutation, useRescheduleInterviewMutation} = interviewApi
 

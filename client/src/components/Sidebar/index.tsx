@@ -17,9 +17,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { setLogout } from "../../state/slices/auth/authSlice";
 import { toast } from "react-toastify";
 
-type Props = {};
 
-const Sidebar = (props: Props) => {
+const Sidebar = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -40,6 +39,7 @@ const Sidebar = (props: Props) => {
 
     setLogout();
     toast.success("Logout successful");
+    window.location.reload();
     navigate("/login");
   }
 
@@ -51,7 +51,7 @@ const Sidebar = (props: Props) => {
     >
       {isSideBarOpen && (
         <div className="border-b border-bahia-500 dark:border-bahia-600">
-          <div className="flex items-center justify-between h-11 px-3 bg-bahia-500 dark:bg-bahia-600">
+          <div className="flex items-center justify-between h-12 px-3 bg-bahia-500 dark:bg-bahia-600">
             <div className="text-md font-bold text-gray-800 dark:text-white tracking-wider">
               InterviewPlat
             </div>
@@ -68,12 +68,12 @@ const Sidebar = (props: Props) => {
       <nav className="z-10 w-full">
         <SidebarLink href="/" icon={Home} label="Home" />
         <SidebarLink href="/about" icon={BookText} label="About" />
-        <SidebarLink href="/search" icon={Search} label="Search" />
+        {checkAuth.isAuthenticated && <SidebarLink href="/search" icon={Search} label="Search" />}
 
         {/* Interviewer with submenu */}
         <div
           onClick={() => setIsInterviewerOpen(!isInterviewerOpen)}
-          className="flex items-center cursor-pointer gap-3 px-8 py-3 border-b border-bahia-500 hover:bg-gray-100 dark:hover:bg-gray-700 justify-start relative"
+          className="flex items-center cursor-pointer gap-3 px-8 py-3 border-b border-bahia-500 hover:bg-gray-100 dark:hover:bg-graycl-700 justify-start relative"
         >
           <UserCheck className="h-6 w-6 text-gray-800 dark:text-gray-100" />
           <span className="font-medium text-gray-800 dark:text-gray-100">
@@ -87,25 +87,26 @@ const Sidebar = (props: Props) => {
           <div className="flex flex-col ml-8 border-l border-gray-300 dark:border-gray-600">
             {!checkAuth.isAuthenticated || !checkAuth.user?.role?.includes("INTERVIEWER") ? (<SidebarLink href="/interviewer/login" icon={LogIn} label="Login" />) :
             (
-                <> <SidebarLink href="/interviewer/dashboard" icon={Home} label="Dashboard" />
-                <SidebarLink href="/interviewer/interviews" icon={BookText} label="My Interviews" />
-                <SidebarLink href="/interviewer/profile" icon={Settings} label="Profile" />
+                <> 
+                  <SidebarLink href="/interviewer/dashboard" icon={Home} label="Dashboard" />
+                  <SidebarLink href="/interviewer/interviews" icon={BookText} label="My Interviews" />
+                  <SidebarLink href="/interviewer/schedule" icon={BookText} label="Schedule Interview" />
                 </>
   
             )}
           </div>
         )}
 
-        <SidebarLink href="/message" icon={MessageSquareText} label="Message" />
-        <SidebarLink href="/settings" icon={Settings} label="Settings" />
+        {checkAuth.isAuthenticated && <SidebarLink href="/message" icon={MessageSquareText} label="Message" />}
+        {checkAuth.isAuthenticated && <SidebarLink href="/settings" icon={Settings} label="Settings" />}
       </nav>
 
-      <div className="flex items-center space-x-2 fixed w-full p-0 bottom-0 cursor-pointer border border-bahia-500 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 bg-gray-100 text-gray-800 dark:text-white dark:bg-gray-900 px-8 py-2">
+      {checkAuth.isAuthenticated && <div className="flex items-center space-x-2 fixed w-full p-0 bottom-0 cursor-pointer border border-bahia-500 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 bg-gray-100 text-gray-800 dark:text-white dark:bg-gray-900 px-8 py-2">
         <LogOut />
         <button onClick={handleLogout} className="text-lg font-serif cursor-pointer">
           Logout
         </button>
-      </div>
+      </div>}
     </div>
   );
 };

@@ -14,8 +14,6 @@ const Navbar = () => {
 
     const userState = useAppSelector(state => state.auth);
 
-
-
     const isDarkMode = useAppSelector(state => state.darkMode.isDarkMode);
 
     const isSideBarOpen = useAppSelector(state => state.generic.isSideBarOpen);
@@ -39,13 +37,13 @@ const Navbar = () => {
                 {!userState.isAuthenticated && (<div className='flex items-center mx-4 p-1 px-3 bg-bahia-400 rounded-md hover:bg-bahia-500 cursor-pointer dark:bg-bahia-600'>
                     <button className='cursor-pointer p-1 px-2 dark:text-white tracking-widest' onClick={() => navigate("/login")}>login</button>
                 </div>)}
-                <div className='md:flex hidden mx-2 px-3 py-0.5 mt-0 dark:cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-500 rounded'>
+                {userState.isAuthenticated && <div className='md:flex hidden mx-2 px-3 py-0.5 mt-0 dark:cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-500 rounded'>
                     <button className='cursor-pointer rounded p-1' onClick={() => navigate("/message")}>
                         <MessageSquareText className='w-6 h-6 dark:text-white' />
                     </button>
-                </div>
+                </div>}
 
-                <div className="relative mx-2 px-3 py-0.5 mt-0 hover:bg-gray-200 dark:hover:bg-gray-500 rounded">
+                {userState.isAuthenticated && <div className="relative mx-2 px-3 py-0.5 mt-0 hover:bg-gray-200 dark:hover:bg-gray-500 rounded">
                     <button
                         className="cursor-pointer rounded p-1"
                         onClick={() => dispatch(setIsNotificationPanel(!isNotificationPanelOpen))}
@@ -63,13 +61,13 @@ const Navbar = () => {
                             <NotificationPanel />
                         </div>
                     )}
-                </div>
+                </div>}
 
 
-                <div className='relative sm:flex h-min hidden'>
+                {userState.isAuthenticated && <div className='relative sm:flex h-min hidden'>
                     <GenericSearch />
                 </div>
-
+}
                 <div className='flex items-center sm:mx-2 sm:px-3  px-1 py-0.5'>
                     <button className={`rounded px-3 py-1.5 mx-4 cursor-pointer ${isDarkMode ? "hover:bg-gray-500 hover:text-white" : "hover:bg-gray-200"}`}
                         onClick={() => dispatch(toggleDarkMode())}>
@@ -77,13 +75,12 @@ const Navbar = () => {
                     </button>
                 </div>
 
-                <div className='hidden sm:flex' onClick={()=>{navigate(`/user/profile/${userState.user?.id}`)}}>
-                    {false ? <ProfileAvatar isnavbar={true} className='rounded-full' imgUrl={"https://imgs.search.brave.com/kc1n3-GJDSk9NXcS8OGpKHyfgJ0ouqMZ12jHKrAw6a4/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvMTM1/NTcyMzM0OS9waG90/by9mdW5ueS1raWQt/Z2lybC1wbGF5aW5n/LW91dGRvb3Itc3Vy/cHJpc2VkLWVtb3Rp/b25hbC1jaGlsZC1p/bi1zdW5nbGFzc2Vz/LTMteWVhcnMtb2xk/LWJhYnkuanBnP3M9/NjEyeDYxMiZ3PTAm/az0yMCZjPUR5SF9D/bDB3T3k4TnotWHR4/alhUc1Qwa1ViZ1Zm/aGNGd0VYNUtQZ1Mt/cE09"} />
+                {userState.isAuthenticated && <div className='hidden sm:flex' onClick={()=>{navigate(`/user/profile/${userState.user?.id}`)}}>
+                    {userState.user && userState.user.profileUrl ? <ProfileAvatar isnavbar={true} className='rounded-full' imgUrl={ userState.user?.profileUrl } />
                         :
                         <NormalAvatar isnavbar={true} className='' />
-
                     }
-                </div>
+                </div>}
 
             </div>
         </div>

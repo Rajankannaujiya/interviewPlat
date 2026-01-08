@@ -184,7 +184,7 @@ export function handleIceCandidate(message: TypeWebRTCSchema){
 }
 
 export function handleLeave(message: TypeWebRTCSchema, ws:WebSocket){
-
+  handleSendWithoutChange(message);
 }
 
 export function sendSuccessMessage(userId: string, message: any) {

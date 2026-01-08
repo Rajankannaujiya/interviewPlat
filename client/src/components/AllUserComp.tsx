@@ -6,7 +6,6 @@ import { NormalAvatar, ProfileAvatar } from "./Navbar";
 import { useAppSelector } from "../state/hook";
 import { ExistingChat, User } from "../types/user";
 
-type Props = {}
 
 const AllUserComp = () => {
   const user = useAppSelector(state => state.auth.user); // ✅ assumes state.auth.user holds { id, email, ... }

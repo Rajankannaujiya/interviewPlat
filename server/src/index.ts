@@ -3,7 +3,6 @@ import http from "http";
 import dotenv from "dotenv";
 import cors from "cors";
 import { setUpWebsocketServer } from "./websockets/websocket";
-import asyncHandler from "express-async-handler";
 
 
 // routers
@@ -14,7 +13,7 @@ import feedbackRouter from "./route/feedbackRouter"
 import commentRouter from "./route/commentRouter";
 import notificationRouter from "./route/notificationRouter"
 import userRouter from "./route/userRouter"
-import chatRouter from "./route/chatRoute"
+import chatRouter from "./route/chatRouter"
 
 import { userMiddleWare } from "./middleware/userMiddleWare";
 

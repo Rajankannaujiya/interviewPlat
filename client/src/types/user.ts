@@ -47,7 +47,7 @@ export interface User{
     isEmailVerified?: boolean                                                     
     isMobileVerified?: boolean
     profileUrl?: string
-    role?: Role
+    role?: Role[]
     notification?: Notification[] | []
     comment?:Comment
     sentMessage?: Message[] | []

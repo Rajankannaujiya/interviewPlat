@@ -1,26 +1,177 @@
 // src/components/interview/InterViewConsole.tsx
-import { Mic, PhoneCall, ScreenShare, MessageSquare, X } from "lucide-react";
+import { Mic, PhoneCall, ScreenShare, MessageSquare, X, MicOff, ScreenShareOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ChatMessages } from "../message/component/ChatArea";
 import { Message } from "../../types/user";
 import {
+  dataChannel,
   localStream,
+  pc,
   registerLocalStreamCallback,
+  registerOnMessageCallback,
   registerRemoteStreamCallback,
   remoteStream,
 } from "./webrtc/webrtc";
+import { useGetAllMyInterviewsQuery, useUpdateInterviewStatusMutation } from "../../state/api/interview";
+import { useAppSelector } from "../../state/hook";
+import { toast } from "react-toastify";
+import { Interview } from "../../types/interview";
+import { useNavigate } from "react-router-dom";
+import { handleDisconnection } from "./webrtc/Signalling";
+import { webRTCType } from "../../types/message";
+import FeedBack from "../../components/FeedBack";
 
 const InterViewConsole = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState("");
-  const [feedback, setFeedback] = useState("");
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [localStreamState, setLocalStreamState] = useState<MediaStream | null>(null);
+  const [remoteStreamState, setRemoteStreamState] = useState<MediaStream | null>(null);
+  const [isScreenSharing, setIsScreenSharing] = useState<boolean>(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isMuted, setIsMuted] = useState(false);
 
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
 
-  const [localStreamState, setLocalStreamState] = useState<MediaStream | null>(null);
-  const [remoteStreamState, setRemoteStreamState] = useState<MediaStream | null>(null);
+
+  const selectedInterviewId = useAppSelector(state => state.chat.selectedInterviewId);
+  const userAuthState = useAppSelector((state) => state.auth);
+  const currentUserId = userAuthState.user?.id;
+  const navigate = useNavigate();
+
+  const [updateInterviewStatus] = useUpdateInterviewStatusMutation();
+  
+  if (!userAuthState.isAuthenticated && !userAuthState.user) {
+    toast.error("☠️ Please login");
+    return null;
+  }
+
+
+  const { data, isError } = useGetAllMyInterviewsQuery(
+      { userId: currentUserId! },
+      { skip: !userAuthState.isAuthenticated || !userAuthState.user?.id }
+    );
+  
+    if (isError) {
+      toast.error("An error occurred while fetching the data");
+      return null;
+    }
+  
+    const allInterviews: Interview[] = data?.myinterviews || [];
+  
+    // Sort by scheduled time
+  const interviewSelected: Interview | undefined = allInterviews.find(i => i.id === selectedInterviewId);
+  const receiverId = (currentUserId === interviewSelected?.candidateId ? interviewSelected?.interviewerId : interviewSelected?.candidateId);
+  
+
+
+  const handleSend = () => {
+    if (input.trim() === "") return;
+    const msg:Message = {
+      id:Math.random().toString(),
+      senderId: currentUserId!,
+      receiverId: receiverId!,
+      content: input,
+      createdAt: new Date()
+    }
+
+    if(dataChannel && dataChannel.readyState === "open"){
+      dataChannel.send(JSON.stringify(msg));
+    }
+
+    setMessages(prev => [...prev, msg]);
+    setInput("");
+    // TODO: send through data channel or signalling
+  };
+
+
+  const handleCutCall = async()=>{
+
+    await updateInterviewStatus({
+      interviewId: interviewSelected?.id!,
+      status: "COMPLETED",
+      updateAll: false,
+    }).unwrap();
+    toast.success(`Interview ${interviewSelected?.id!} marked as COMPLETED`);
+
+    const msg:webRTCType = {
+      type:"webrtc_connection",
+      payload:{
+        action:"LEAVE",
+        userId:currentUserId!,
+        interviewId: interviewSelected?.id!
+      },
+      role: currentUserId === interviewSelected?.candidateId ? "ANSWERER" : "OFFERER"
+    }
+    await handleDisconnection(currentUserId!, msg);
+    localVideoRef.current = null;
+    remoteVideoRef.current = null
+    navigate("/");
+  }
+
+
+  async function captureScreen() {
+     const displayMediaOptions:any = {
+      video: { cursor: "always" },
+      audio: isMuted ? true : false, // set to true if you want system audio
+    };
+    return await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+  }
+
+  const handleScreenShare = async () => {
+  try {
+    const stream = await captureScreen();
+
+    const screenVideoTrack = stream.getVideoTracks()[0];
+    const sender = pc?.getSenders().find(s => s.track?.kind === "video");
+
+    if (sender) {
+      await sender.replaceTrack(screenVideoTrack);
+    } else {
+      pc?.addTrack(screenVideoTrack, stream);
+    }
+
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+      localVideoRef.current.onloadedmetadata = () => {
+        localVideoRef.current?.play().catch(console.warn);
+      };
+      setIsScreenSharing(true);
+    }
+    screenVideoTrack.onended = handleStopScreenShare;
+  } catch (err) {
+    console.error("Screen share error:", err);
+  }
+  };
+
+  const handleStopScreenShare =  async () => {
+      if (localStream) {
+        const camVideoTrack = localStream.getVideoTracks()[0];
+
+        const sender = pc?.getSenders().find(s => s.track?.kind === "video");
+        if (sender) {
+          await sender.replaceTrack(camVideoTrack);
+        }
+
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = localStream;
+          localVideoRef.current.play().catch(console.warn);
+          setIsScreenSharing(false);
+        }
+      }
+    };
+
+  const handleMuteAndUnmute = () => {
+  console.log("ismuted", isMuted)
+    if (!localStream) return;
+
+    const audioTrack = localStream.getAudioTracks()[0];
+    if (!audioTrack) return;
+
+    audioTrack.enabled = !audioTrack.enabled;
+    setIsMuted(!audioTrack.enabled);
+  };
 
   useEffect(() => {
     console.log("Component mounted =>", {
@@ -91,34 +242,13 @@ const InterViewConsole = () => {
     }
   }, [remoteStreamState]);
 
-  console.log(
-    "remotestream gettrack",
-    remoteStreamState?.getVideoTracks(),
-    remoteStreamState?.getAudioTracks()
-  );
- 
-  const handleSend = () => {
-    if (input.trim() === "") return;
-    setInput("");
-    // TODO: send through data channel or signalling
-  };
 
-  const messagesAlternative: Message[] = [
-    {
-      id: "1",
-      senderId: "user1",
-      receiverId: "user2",
-      content: "Hey! How are you doing today?",
-      createdAt: new Date("2025-11-09T10:15:00"),
-    },
-    {
-      id: "2",
-      senderId: "user2",
-      receiverId: "user1",
-      content: "I’m good! Just joined the meeting. What about you?",
-      createdAt: new Date("2025-11-09T10:16:30"),
-    },
-  ];
+  useEffect(() => {
+  registerOnMessageCallback((msg: Message) => {
+    setMessages(prev => [...prev, msg]);
+  });
+  }, []);
+
 
   return (
     <div
@@ -173,40 +303,46 @@ const InterViewConsole = () => {
 
         {/* CONTROL BUTTONS */}
         <div className="hidden lg:flex justify-center flex-wrap gap-4 mt-4 pb-3 sticky bottom-0 bg-gray-200 dark:bg-gray-900/60 backdrop-blur-md py-3 rounded-xl border-t border-gray-800">
-          <button className="bg-red-600 hover:bg-red-700 px-5 py-2 rounded-full flex items-center gap-2 shadow-md transition-all text-base">
+          <button className="bg-red-600 hover:bg-red-700 px-5 py-2 cursor-pointer rounded-full flex items-center gap-2 shadow-md transition-all text-base" onClick={handleCutCall}>
             <PhoneCall className="m-1 p-1" /> End Call
           </button>
-          <button className="bg-gray-700 hover:bg-gray-600 px-5 py-2 rounded-full flex items-center gap-2 transition-all text-base">
-            <Mic className="m-1 p-1" /> Mute
+          <button className="bg-gray-700 hover:bg-gray-600 px-5 py-2 cursor-pointer rounded-full flex items-center gap-2 transition-all text-base" onClick={handleMuteAndUnmute}>
+            {isMuted ? < MicOff/> : <Mic />}
+            <span>{isMuted ? "Unmute" : "Mute"}</span>
+
           </button>
-          <button className="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-full flex items-center gap-2 transition-all text-base">
-            <ScreenShare className="m-1 p-1" /> Share Screen
+          <button className={` ${isScreenSharing ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"} px-5 py-2 cursor-pointer rounded-full flex items-center gap-2 transition-all text-base`} onClick={isScreenSharing ?  handleStopScreenShare : handleScreenShare}>
+            {isScreenSharing ? <ScreenShare className="m-1 p-1" /> : <ScreenShareOff className="m-1 p-1"/>}
+            <span>{isScreenSharing ? "Stop Sharing" : "Share Screen"}</span>
           </button>
         </div>
 
         {/* Floating Chat Button for Small/Medium Screens */}
         <button
           onClick={() => setIsChatOpen(true)}
-          className="lg:hidden fixed bottom-16 right-5 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg z-50"
+          className="lg:hidden fixed top-16 right-5 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg z-50"
         >
           <MessageSquare className="w-6 h-6" />
         </button>
 
         {/* Bottom control bar for mobile */}
         <div className="lg:hidden fixed bottom-0 left-0 w-full flex justify-around items-center bg-gray-200 dark:bg-gray-900/95 border-t border-gray-800 py-2 z-40">
-          <button className="text-red-100 hover:text-red-200 text-xl bg-red-600 hover:bg-red-700 px-2 py-2 rounded-full">
+          <button className="text-red-100 hover:text-red-200 text-xl cursor-pointer bg-red-600 hover:bg-red-700 px-2 py-2 rounded-full" onClick={handleCutCall}>
             <PhoneCall />
           </button>
-          <button className="text-gray-300 hover:text-white text-xl bg-gray-700 hover:bg-gray-600 py-2 px-2 rounded-full">
-            <Mic />
+          <button
+            onClick={handleMuteAndUnmute}
+            className="text-gray-300 hover:text-white text-xl cursor-pointer bg-gray-700 hover:bg-gray-600 py-2 px-2 rounded-full"
+          >
+            {isMuted ? < MicOff/> : <Mic />}
           </button>
-          <button className="text-blue-100 hover:text-blue-200 text-xl bg-blue-600 hover:bg-blue-700 py-2 px-2 rounded-full">
-            <ScreenShare />
+
+          <button className={`text-blue-100 hover:text-blue-200 cursor-pointer text-xl ${isScreenSharing ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"} py-2 px-2 rounded-full`} onClick={isScreenSharing ?  handleStopScreenShare : handleScreenShare}>
+            {isScreenSharing ? <ScreenShare /> : <ScreenShareOff/>}
           </button>
         </div>
       </div>
 
-      {/* RIGHT SECTION - CHAT & FEEDBACK */}
       <div
         className={`
           fixed inset-y-0 right-0 w-full sm:w-2/3 md:w-1/2 lg:static lg:w-96
@@ -216,7 +352,6 @@ const InterViewConsole = () => {
           z-50 lg:z-auto
         `}
       >
-        {/* CLOSE BUTTON (only visible on mobile) */}
         <div className="flex justify-between items-center px-4 py-3 border-b border-gray-800 bg-gray-50 dark:bg-gray-950/50 lg:hidden">
           <h2 className="text-base sm:text-lg font-semibold text-blue-400">
             💬 Chat & Feedback
@@ -231,7 +366,7 @@ const InterViewConsole = () => {
 
         {/* CHAT */}
         <div className="flex-1 p-4 overflow-y-auto scrollbar-hide">
-          <ChatMessages messages={messagesAlternative} scrollRef={scrollRef} user={null} />
+          <ChatMessages messages={messages} scrollRef={scrollRef} user={null} />
         </div>
 
         {/* INPUT */}
@@ -253,20 +388,7 @@ const InterViewConsole = () => {
         </div>
 
         {/* FEEDBACK */}
-        <div className="p-4 border-t border-gray-800 bg-gray-200 dark:bg-gray-950/40">
-          <h2 className="text-base sm:text-lg font-semibold dark:text-blue-400 text-blue-600 mb-2">
-            🧠 Feedback
-          </h2>
-          <textarea
-            placeholder="Write your feedback..."
-            className="w-full h-20 sm:h-24 px-3 py-2 rounded-xl text-black dark:text-white bg-gray-100 dark:bg-gray-800 border border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none resize-none text-sm sm:text-base"
-            value={feedback}
-            onChange={(e) => setFeedback(e.target.value)}
-          ></textarea>
-          <button className="w-full mt-3 bg-blue-600 hover:bg-blue-700 py-2 rounded-xl transition text-sm sm:text-base">
-            Submit Feedback
-          </button>
-        </div>
+        <FeedBack interviewId={interviewSelected?.id!}/>
       </div>
     </div>
   );

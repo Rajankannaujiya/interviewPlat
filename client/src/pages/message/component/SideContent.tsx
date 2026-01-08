@@ -1,8 +1,6 @@
 
 import { toast } from 'react-toastify';
-import { ExistingChat, User } from '../../../types/user';
 import { NormalAvatar, ProfileAvatar } from '../../../components/Navbar';
-import { MessageSquareMore } from 'lucide-react';
 import { useEffect } from 'react';
 import Loading from '../../../components/Loading';
 import { useGetChattedUsersWithLastMessageQuery } from '../../../state/api/generic';
@@ -22,10 +20,6 @@ const SideContent = () => {
 
   return (
     <div className="flex flex-col w-full h-full">
-      <div className="w-full flex flex-row items-center cursor-pointer font-bold p-3 mb-2 gap-3 bg-light-background dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded shadow">
-        <MessageSquareMore className="dark:text-light-background" />
-        Chat With AI
-      </div>
      {isChatsWithUserLoading ? (
   <div className="flex justify-center items-center w-full h-full">
     <Loading />
@@ -57,7 +51,7 @@ const navigate = useNavigate();
         {chat.user.profileUrl ? (
           <ProfileAvatar
             isnavbar={false} 
-            className="w-12 h-12"
+            className="w-12 h-12 rounded-full"
             imgUrl={chat.user.profileUrl}
           />
         ) : (
