@@ -23,7 +23,8 @@ export const geminiresponse = async (req: Request, res: Response) => {
   const { contents } = req.body; 
 
   if (!contents || typeof contents !== 'string' || contents.trim() === '') {
-    return res.status(400).json({ error: "A valid 'contents' string must be provided for the AI query." });
+    res.status(400).json({ error: "A valid 'contents' string must be provided for the AI query." });
+    return 
   }
 
   try {
@@ -50,12 +51,14 @@ export const geminiresponse = async (req: Request, res: Response) => {
       }
     }
     
-    return res.status(200).json({ answer });
+    res.status(200).json({ answer });
+    return 
 
   } catch (error) {
 
     console.error("Error calling Gemini API:", error);
     
-    return res.status(500).json({ error: "A server error occurred while processing the AI request." });
+    res.status(500).json({ error: "A server error occurred while processing the AI request." });
+    return 
   }
 };
