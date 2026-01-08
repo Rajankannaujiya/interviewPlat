@@ -11,7 +11,7 @@
     "start": "npm run build && node dist/index.js",
     "seed": "tsx prisma/seed.ts",
     "postinstall": "npm run prisma:generate",
-    "prisma:generate": "npx prisma generate --schema=./packages/db/schema.prisma"
+    "prisma:generate": "npx prisma generate --schema=./prisma/schema.prisma",
   },
   "keywords": [],
   "author": "",
@@ -53,4 +53,5 @@
     "typescript": "^5.8.3"
   }
 }
+
 
