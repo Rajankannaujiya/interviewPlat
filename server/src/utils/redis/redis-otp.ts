@@ -7,12 +7,16 @@ class RedisClient {
   private client: Redis;
 
   private constructor() {
-    this.client = new Redis({
-      host: process.env.REDIS_HOST || "127.0.0.1",
-      port: parseInt(process.env.REDIS_PORT || "6379"),
-      maxRetriesPerRequest:null
+
+    const redis_uri = process.env.REDIS_URI;
+
+    if (!redis_uri) {
+      throw new Error("REDIS_URI is not defined");
+    }else{
+      this.client = new Redis(redis_uri, {
+      maxRetriesPerRequest: null,
+    });
     }
-  );
 
     this.client.on("error", (error: any) => {
       console.error("Error while connecting to Redis:", error.message);
